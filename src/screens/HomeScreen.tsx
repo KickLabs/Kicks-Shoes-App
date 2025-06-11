@@ -20,19 +20,19 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff"
   },
   content: {
     flex: 1,
     padding: 16,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center"
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 16,
-  },
+    marginBottom: 16
+  }
 });
 
 export default HomeScreen;
