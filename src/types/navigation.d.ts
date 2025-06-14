@@ -5,4 +5,7 @@ export type RootStackParamList = {
   Verify: undefined;
   Login: undefined;
   Home: undefined;
+  Main: undefined;
+  Auth: undefined;
+  ProductDetails: { productId: string };
 };
