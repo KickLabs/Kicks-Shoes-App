@@ -1,43 +1,21 @@
-import { API_BASE_URL } from "@/constants/config";
+import axios from "./axios.customize";
 
-interface ApiResponse<T> {
-  data: T;
-  status: number;
-}
+export const registerAPI = (email: string, password: string, name: string) => {
+  const url = `/api/v1/auth/register`;
+  return axios.post<IBackendRes<IRegister>>(url, { name, email, password });
+};
 
-class ApiService {
-  private baseUrl: string;
+export const verifyCodeAPI = (email: string, code: string) => {
+  const url = `/api/v1/auth/verify-code`;
+  return axios.post<IBackendRes<IRegister>>(url, { email, code });
+};
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
+export const resendCodeAPI = (email: string) => {
+  const url = `/api/v1/auth/verify-email`;
+  return axios.post<IBackendRes<IRegister>>(url, { email });
+};
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
-
-    const data = await response.json();
-
-    return {
-      data,
-      status: response.status,
-    };
-  }
-
-  async getExample() {
-    // This is a mock response. In a real app, this would be an actual API call
-    return {
-      message: "Hello from the API!",
-    };
-  }
-}
-
-export const apiService = new ApiService(API_BASE_URL);
+export const loginAPI = (email: string, password: string) => {
+  const url = `/api/auth/login`;
+  return axios.post<IBackendRes<IUserLogin>>(url, { email, password });
+};
