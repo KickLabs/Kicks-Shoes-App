@@ -1,134 +1,185 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { COLORS, SIZES, SHADOWS } from "../../constants/theme";
-import { MainStackParamList } from "../../types";
+import React, { useState } from "react";
+import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
+import Banner from "../../components/common/Banner";
+import ProductCard from "../../components/common/ProductCard";
+import CategorySection from "../../components/common/CategorySection";
+import ReviewCard from "../../components/common/ReviewCard";
+import { COLORS } from "../../constants/theme";
+import { products as mockProducts } from "../../mockData";
 
-type HomeScreenNavigationProp = StackNavigationProp<MainStackParamList>;
+const bannerProduct = mockProducts.find((p) => p.name.includes("Air Max 270"));
+const bannerImages = bannerProduct ? bannerProduct.images : [];
+
+const newProducts = mockProducts.filter((p) => p.isNew).slice(0, 4);
+
+const brandMap: { [key: string]: (typeof mockProducts)[0] } = {};
+mockProducts.forEach((p) => {
+  if (!brandMap[p.brand]) brandMap[p.brand] = p;
+});
+const categories = (Object.values(brandMap) as typeof mockProducts)
+  .slice(0, 2)
+  .map((p) => ({
+    name: p.brand + " Shoes",
+    image: { uri: p.images[0] },
+    onPress: () => {},
+  }));
+
+const reviews = [
+  {
+    avatar: { uri: newProducts[0]?.images[0] },
+    name: newProducts[0]?.name || "Good Quality",
+    rating: newProducts[0]?.rating || 5.0,
+    content:
+      newProducts[0]?.summary || "I highly recommend shopping from kicks",
+    productImage: { uri: newProducts[0]?.images[0] },
+  },
+];
 
 const HomeScreen = () => {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const [bannerIdx, setBannerIdx] = useState(0);
+  const handleShopNow = () => {};
+  const handleBannerThumb = (idx: number) => setBannerIdx(idx);
+  const handleCategoryPrev = () => {};
+  const handleCategoryNext = () => {};
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Welcome to Kicks Shoes</Text>
+    <ScrollView style={{ flex: 1 }}>
+      {bannerProduct && (
+        <Banner
+          title="DO IT RIGHT"
+          subtitle={`NIKE AIR MAX\n${bannerProduct.summary}`}
+          image={{ uri: bannerImages[bannerIdx] }}
+          tag="New product of this year"
+          onShopNow={handleShopNow}
+          thumbnails={bannerImages.map((img) => ({ uri: img }))}
+          onThumbnailPress={handleBannerThumb}
+          selectedThumbnail={bannerIdx}
+        />
+      )}
+      {/* New Drops */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          marginTop: 8,
+        }}
+      >
+        <Text
+          style={{
+            maxWidth: "55%",
+            marginBottom: 0,
+            color: COLORS.black,
+            fontSize: 26,
+            fontFamily: "Rubik-SemiBold",
+          }}
+          numberOfLines={2}
+        >
+          {`Don't miss out\nnew drops`}
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: COLORS.blue,
+            borderRadius: 10,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            marginLeft: 12,
+          }}
+        >
+          <Text
+            style={{
+              color: COLORS.white,
+              fontFamily: "Rubik-Medium",
+              fontSize: 15,
+              textTransform: "uppercase",
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            NEW DROPS
+          </Text>
+        </TouchableOpacity>
       </View>
-
-      <View style={styles.categories}>
-        <Text style={styles.sectionTitle}>Categories</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {["Running", "Casual", "Sports", "Formal"].map((category) => (
-            <TouchableOpacity
-              key={category}
-              style={styles.categoryItem}
-              onPress={() => {
-                // Handle category selection
-              }}
-            >
-              <Text style={styles.categoryText}>{category}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          padding: 16,
+        }}
+      >
+        {newProducts.map((p, idx) => (
+          <ProductCard
+            key={p.id}
+            image={{ uri: p.images[0] }}
+            name={p.name}
+            price={`$${p.price.regular}`}
+            tag={
+              p.isNew
+                ? "New"
+                : p.price.isOnSale
+                  ? `${p.price.discountPercent}% off`
+                  : undefined
+            }
+            onPress={() => {}}
+          />
+        ))}
       </View>
-
-      <View style={styles.featured}>
-        <Text style={styles.sectionTitle}>Featured Products</Text>
-        <View style={styles.productGrid}>
-          {[1, 2, 3, 4].map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={styles.productCard}
-              onPress={() => {
-                navigation.navigate("ProductDetails", {
-                  productId: item.toString(),
-                });
-              }}
-            >
-              <View style={styles.productImage} />
-              <Text style={styles.productName}>Product {item}</Text>
-              <Text style={styles.productPrice}>$99.99</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+      {/* Categories Section */}
+      <CategorySection
+        categories={categories}
+        onPrev={handleCategoryPrev}
+        onNext={handleCategoryNext}
+      />
+      {/* Reviews Section */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          marginTop: 8,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontFamily: "Rubik-SemiBold",
+            color: COLORS.black,
+          }}
+        >
+          Reviews
+        </Text>
+        <TouchableOpacity
+          style={{
+            backgroundColor: COLORS.blue,
+            borderRadius: 10,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            marginLeft: 12,
+          }}
+        >
+          <Text
+            style={{
+              color: COLORS.white,
+              fontFamily: "Rubik-Medium",
+              fontSize: 15,
+              textTransform: "uppercase",
+            }}
+          >
+            SEE ALL
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View style={{ padding: 16 }}>
+        {reviews.map((r, idx) => (
+          <ReviewCard key={idx} {...r} />
+        ))}
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-  },
-  header: {
-    padding: SIZES.padding,
-    backgroundColor: COLORS.primary,
-  },
-  title: {
-    fontSize: SIZES.h1,
-    color: COLORS.white,
-    fontWeight: "bold",
-  },
-  categories: {
-    padding: SIZES.padding,
-  },
-  sectionTitle: {
-    fontSize: SIZES.h2,
-    color: COLORS.black,
-    marginBottom: SIZES.base,
-  },
-  categoryItem: {
-    paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.base,
-    backgroundColor: COLORS.lightGray,
-    borderRadius: SIZES.radius,
-    marginRight: SIZES.base,
-  },
-  categoryText: {
-    color: COLORS.black,
-    fontSize: SIZES.body3,
-  },
-  featured: {
-    padding: SIZES.padding,
-  },
-  productGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  productCard: {
-    width: "48%",
-    marginBottom: SIZES.padding,
-    backgroundColor: COLORS.white,
-    borderRadius: SIZES.radius,
-    padding: SIZES.base,
-    ...SHADOWS.medium,
-  },
-  productImage: {
-    width: "100%",
-    height: 150,
-    backgroundColor: COLORS.lightGray,
-    borderRadius: SIZES.radius,
-    marginBottom: SIZES.base,
-  },
-  productName: {
-    fontSize: SIZES.body3,
-    color: COLORS.black,
-    marginBottom: SIZES.base / 2,
-  },
-  productPrice: {
-    fontSize: SIZES.body4,
-    color: COLORS.primary,
-    fontWeight: "bold",
-  },
-});
 
 export default HomeScreen;
