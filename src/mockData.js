@@ -344,7 +344,7 @@ export const orders = [
     customer: "John Doe",
     date: "2024-03-20",
     amount: 110.4,
-    status: "Completed",
+    status: "pending",
     items: [
       {
         productId: 1,
@@ -356,10 +356,10 @@ export const orders = [
   },
   {
     id: 2,
-    customer: "Jane Smith",
+    customer: "John Doe",
     date: "2024-03-19",
     amount: 250.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 4,
@@ -371,10 +371,10 @@ export const orders = [
   },
   {
     id: 3,
-    customer: "Mike Johnson",
+    customer: "John Doe",
     date: "2024-03-18",
     amount: 179.98,
-    status: "Completed",
+    status: "shipped",
     items: [
       {
         productId: 5,
@@ -386,10 +386,10 @@ export const orders = [
   },
   {
     id: 4,
-    customer: "Sarah Wilson",
+    customer: "John Doe",
     date: "2024-03-17",
     amount: 345.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 10,
@@ -413,10 +413,10 @@ export const orders = [
   },
   {
     id: 5,
-    customer: "David Brown",
+    customer: "John Doe",
     date: "2024-03-16",
     amount: 130.0,
-    status: "Processing",
+    status: "cancelled",
     items: [
       {
         productId: 14,
@@ -428,10 +428,10 @@ export const orders = [
   },
   {
     id: 6,
-    customer: "Emily Davis",
+    customer: "John Doe",
     date: "2024-03-15",
     amount: 460.0,
-    status: "Completed",
+    status: "pending",
     items: [
       {
         productId: 18,
@@ -449,10 +449,10 @@ export const orders = [
   },
   {
     id: 7,
-    customer: "Robert Taylor",
+    customer: "John Doe",
     date: "2024-03-14",
     amount: 85.0,
-    status: "Completed",
+    status: "pending",
     items: [
       {
         productId: 9,
@@ -464,10 +464,10 @@ export const orders = [
   },
   {
     id: 8,
-    customer: "Lisa Anderson",
+    customer: "John Doe",
     date: "2024-03-13",
     amount: 200.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 8,
@@ -479,10 +479,10 @@ export const orders = [
   },
   {
     id: 9,
-    customer: "James Wilson",
+    customer: "John Doe",
     date: "2024-03-12",
     amount: 180.0,
-    status: "Completed",
+    status: "shipped",
     items: [
       {
         productId: 19,
@@ -494,10 +494,10 @@ export const orders = [
   },
   {
     id: 10,
-    customer: "Maria Garcia",
+    customer: "John Doe",
     date: "2024-03-11",
     amount: 260.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 3,
@@ -515,10 +515,10 @@ export const orders = [
   },
   {
     id: 11,
-    customer: "Thomas Lee",
+    customer: "John Doe",
     date: "2024-03-10",
     amount: 115.0,
-    status: "Processing",
+    status: "cancelled",
     items: [
       {
         productId: 6,
@@ -530,10 +530,10 @@ export const orders = [
   },
   {
     id: 12,
-    customer: "Jennifer White",
+    customer: "John Doe",
     date: "2024-03-09",
     amount: 175.0,
-    status: "Completed",
+    status: "pending",
     items: [
       {
         productId: 16,
@@ -545,10 +545,10 @@ export const orders = [
   },
   {
     id: 13,
-    customer: "William Clark",
+    customer: "John Doe",
     date: "2024-03-08",
     amount: 130.0,
-    status: "Processing",
+    status: "pending",
     items: [
       {
         productId: 13,
@@ -560,10 +560,10 @@ export const orders = [
   },
   {
     id: 14,
-    customer: "Patricia Martinez",
+    customer: "John Doe",
     date: "2024-03-07",
     amount: 180.0,
-    status: "Completed",
+    status: "processing",
     items: [
       {
         productId: 11,
@@ -578,7 +578,7 @@ export const orders = [
     customer: "Michael Thompson",
     date: "2024-03-06",
     amount: 95.0,
-    status: "Completed",
+    status: "shipped",
     items: [
       {
         productId: 12,
@@ -593,7 +593,7 @@ export const orders = [
     customer: "Elizabeth Hall",
     date: "2024-03-05",
     amount: 340.0,
-    status: "Processing",
+    status: "delivered",
     items: [
       {
         productId: 2,
@@ -614,7 +614,7 @@ export const orders = [
     customer: "Daniel Allen",
     date: "2024-03-04",
     amount: 200.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 18,
@@ -629,7 +629,7 @@ export const orders = [
     customer: "Susan Young",
     date: "2024-03-03",
     amount: 85.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 15,
@@ -644,7 +644,7 @@ export const orders = [
     customer: "Joseph King",
     date: "2024-03-02",
     amount: 230.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 17,
@@ -659,7 +659,7 @@ export const orders = [
     customer: "Margaret Wright",
     date: "2024-03-01",
     amount: 160.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 20,
@@ -674,7 +674,7 @@ export const orders = [
     customer: "Christopher Lee",
     date: "2024-02-29",
     amount: 89.99,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 21,
@@ -689,7 +689,7 @@ export const orders = [
     customer: "Jessica Taylor",
     date: "2024-02-28",
     amount: 110.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 22,
@@ -704,7 +704,7 @@ export const orders = [
     customer: "Andrew Wilson",
     date: "2024-02-27",
     amount: 150.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 23,
@@ -719,7 +719,7 @@ export const orders = [
     customer: "Sophia Brown",
     date: "2024-02-26",
     amount: 165.0,
-    status: "Processing",
+    status: "processing",
     items: [
       {
         productId: 24,
@@ -734,7 +734,7 @@ export const orders = [
     customer: "Matthew Davis",
     date: "2024-02-25",
     amount: 130.0,
-    status: "Completed",
+    status: "delivered",
     items: [
       {
         productId: 25,

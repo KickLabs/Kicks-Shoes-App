@@ -9,6 +9,7 @@ const icons = [
   { name: "home", label: "Home", route: "Home" },
   { name: "cart-outline", label: "Cart", route: "Cart" },
   { name: "heart-outline", label: "Wishlist", route: "Wishlist" },
+  { name: "time-outline", label: "Orders", route: "OrderHistory" },
   { name: "person-outline", label: "Profile", route: "Profile" },
 ];
 
