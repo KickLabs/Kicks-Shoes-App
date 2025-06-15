@@ -29,20 +29,27 @@ const AuthStackScreen = () => (
   </AuthStack.Navigator>
 );
 
+const TabNavigator = () => (
+  <Tab.Navigator
+    tabBar={(props) => <Footer {...props} />}
+    screenOptions={{
+      header: () => <Header />, 
+    }}
+  >
+    <Tab.Screen name="Home" component={HomeScreen} />
+    <Tab.Screen name="Cart" component={CartScreen} />
+    <Tab.Screen name="Wishlist" component={WishlistScreen} />
+    <Tab.Screen name="Profile" component={AuthStackScreen} />
+  </Tab.Navigator>
+);
+
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        tabBar={(props) => <Footer {...props} />}
-        screenOptions={{
-          header: () => <Header />,
-        }}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Cart" component={CartScreen} />
-        <Tab.Screen name="Wishlist" component={WishlistScreen} />
-        <Tab.Screen name="Profile" component={AuthStackScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={TabNavigator} />
+        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

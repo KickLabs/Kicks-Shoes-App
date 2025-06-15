@@ -6,6 +6,7 @@ import CategorySection from "../../components/common/CategorySection";
 import ReviewCard from "../../components/common/ReviewCard";
 import { COLORS } from "../../constants/theme";
 import { products as mockProducts } from "../../mockData";
+import { useNavigation } from "@react-navigation/native";
 
 const bannerProduct = mockProducts.find((p) => p.name.includes("Air Max 270"));
 const bannerImages = bannerProduct ? bannerProduct.images : [];
@@ -37,6 +38,7 @@ const reviews = [
 
 const HomeScreen = () => {
   const [bannerIdx, setBannerIdx] = useState(0);
+  const navigation = useNavigation();
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
@@ -123,7 +125,7 @@ const HomeScreen = () => {
                   ? `${p.price.discountPercent}% off`
                   : undefined
             }
-            onPress={() => {}}
+            onPress={() => navigation.navigate("ProductDetails", { productId: p.id.toString() })}
           />
         ))}
       </View>
