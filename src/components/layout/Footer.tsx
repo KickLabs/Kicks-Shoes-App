@@ -3,11 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { COLORS } from "../../constants/theme";
 
 const icons = [
-  { name: "pricetag", label: "Home", route: "Home" },
+  { name: "home", label: "Home", route: "Home" },
   { name: "cart-outline", label: "Cart", route: "Cart" },
   { name: "heart-outline", label: "Wishlist", route: "Wishlist" },
+  { name: "time-outline", label: "Orders", route: "OrderHistory" },
   { name: "person-outline", label: "Profile", route: "Profile" },
 ];
 
@@ -69,7 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 6,
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

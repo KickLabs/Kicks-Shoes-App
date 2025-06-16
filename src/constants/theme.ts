@@ -4,8 +4,9 @@ const { width, height } = Dimensions.get("window");
 
 export const COLORS = {
   primary: "#FF6B6B",
+  blue: "#4A69E2",
   secondary: "#4ECDC4",
-  black: "#1E1E1E",
+  black: "#232321",
   white: "#FFFFFF",
   lightGray: "#F5F5F5",
   gray: "#9B9B9B",
@@ -47,36 +48,16 @@ export const SIZES = {
 };
 
 export const FONTS = {
-  h1: { fontFamily: "Roboto-Bold", fontSize: SIZES.h1, lineHeight: 36 },
-  h2: { fontFamily: "Roboto-Bold", fontSize: SIZES.h2, lineHeight: 30 },
-  h3: { fontFamily: "Roboto-SemiBold", fontSize: SIZES.h3, lineHeight: 22 },
-  h4: { fontFamily: "Roboto-SemiBold", fontSize: SIZES.h4, lineHeight: 22 },
-  h5: { fontFamily: "Roboto-SemiBold", fontSize: SIZES.h5, lineHeight: 22 },
-  body1: {
-    fontFamily: "Roboto-Regular",
-    fontSize: SIZES.body1,
-    lineHeight: 36,
-  },
-  body2: {
-    fontFamily: "Roboto-Regular",
-    fontSize: SIZES.body2,
-    lineHeight: 30,
-  },
-  body3: {
-    fontFamily: "Roboto-Regular",
-    fontSize: SIZES.body3,
-    lineHeight: 22,
-  },
-  body4: {
-    fontFamily: "Roboto-Regular",
-    fontSize: SIZES.body4,
-    lineHeight: 22,
-  },
-  body5: {
-    fontFamily: "Roboto-Regular",
-    fontSize: SIZES.body5,
-    lineHeight: 22,
-  },
+  h1: { fontFamily: "Rubik-Regular", fontSize: SIZES.h1, lineHeight: 36 },
+  h2: { fontFamily: "Rubik-Regular", fontSize: SIZES.h2, lineHeight: 30 },
+  h3: { fontFamily: "Rubik-Regular", fontSize: SIZES.h3, lineHeight: 22 },
+  h4: { fontFamily: "Rubik-Regular", fontSize: SIZES.h4, lineHeight: 22 },
+  h5: { fontFamily: "Rubik-Regular", fontSize: SIZES.h5, lineHeight: 22 },
+  body1: { fontFamily: "Rubik-Regular", fontSize: SIZES.body1, lineHeight: 36 },
+  body2: { fontFamily: "Rubik-Regular", fontSize: SIZES.body2, lineHeight: 30 },
+  body3: { fontFamily: "Rubik-Regular", fontSize: SIZES.body3, lineHeight: 22 },
+  body4: { fontFamily: "Rubik-Regular", fontSize: SIZES.body4, lineHeight: 22 },
+  body5: { fontFamily: "Rubik-Regular", fontSize: SIZES.body5, lineHeight: 22 },
 };
 
 export const SHADOWS = {
