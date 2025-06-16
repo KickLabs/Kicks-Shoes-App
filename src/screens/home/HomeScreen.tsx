@@ -18,45 +18,45 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Welcome to Kicks Shoes</Text>
-      </View>
+      <View style={{ paddingTop: 90 }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Welcome to Kicks Shoes</Text>
+        </View>
 
-      <View style={styles.categories}>
-        <Text style={styles.sectionTitle}>Categories</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {["Running", "Casual", "Sports", "Formal"].map((category) => (
-            <TouchableOpacity
-              key={category}
-              style={styles.categoryItem}
-              onPress={() => {
-                // Handle category selection
-              }}
-            >
-              <Text style={styles.categoryText}>{category}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+        <View style={styles.categories}>
+          <Text style={styles.sectionTitle}>Categories</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {["Running", "Casual", "Sports", "Formal"].map((category) => (
+              <TouchableOpacity
+                key={category}
+                style={styles.categoryItem}
+                onPress={() => {
+                  // Handle category selection
+                }}>
+                <Text style={styles.categoryText}>{category}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-      <View style={styles.featured}>
-        <Text style={styles.sectionTitle}>Featured Products</Text>
-        <View style={styles.productGrid}>
-          {[1, 2, 3, 4].map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={styles.productCard}
-              onPress={() => {
-                navigation.navigate("ProductDetails", {
-                  productId: item.toString(),
-                });
-              }}
-            >
-              <View style={styles.productImage} />
-              <Text style={styles.productName}>Product {item}</Text>
-              <Text style={styles.productPrice}>$99.99</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.featured}>
+          <Text style={styles.sectionTitle}>Featured Products</Text>
+          <View style={styles.productGrid}>
+            {[1, 2, 3, 4].map((item) => (
+              <TouchableOpacity
+                key={item}
+                style={styles.productCard}
+                onPress={() => {
+                  navigation.navigate("ProductDetails", {
+                    productId: item.toString(),
+                  });
+                }}>
+                <View style={styles.productImage} />
+                <Text style={styles.productName}>Product {item}</Text>
+                <Text style={styles.productPrice}>$99.99</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     </ScrollView>
