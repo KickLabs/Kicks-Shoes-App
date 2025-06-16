@@ -1,25 +1,82 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { COLORS, SIZES } from "../../constants/theme";
+import { View, StyleSheet, ScrollView, Text } from "react-native";
+import CartHeader from "./CartHeader";
+import CartItem from "./CartItem";
+import OrderSummary from "./OrderSummaryWithPromo";
+import CheckoutButton from "./CheckoutButton";
+import { COLORS } from "../../constants/theme";
+import { products as mockProducts } from "../../mockData";
+import ProductCard from "@/components/common/ProductCard";
 
-const CartScreen = () => {
+const newProducts = mockProducts.filter((p) => p.isNew).slice(0, 4);
+
+const CartScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Cart Screen</Text>
-    </View>
+    <ScrollView style={styles.container}>
+      <CartHeader />
+      <CartItem
+        name="DROPSET TRAINER SHOES"
+        description="Men's Road Running Shoes"
+        color="Enamel Blue / University White"
+        size="10"
+        quantity={1}
+        price={130.0}
+      />
+      <OrderSummary
+        itemCount={1}
+        subtotal={130.0}
+        delivery={6.99}
+        total={130.0}
+      />
+      <CheckoutButton />
+      <Text style={styles.title}>You may also like</Text>
+
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        {newProducts.map((p, idx) => (
+          <ProductCard
+            key={p.id}
+            image={{ uri: p.images[0] }}
+            name={p.name}
+            price={`$${p.price.regular}`}
+            tag={
+              p.isNew
+                ? "New"
+                : p.price.isOnSale
+                  ? `${p.price.discountPercent}% off`
+                  : undefined
+            }
+            onPress={() => {}}
+          />
+        ))}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
   },
-  text: {
-    fontSize: SIZES.h2,
+  recommendationContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    rowGap: 16, // khoảng cách giữa các hàng
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
     color: COLORS.black,
+    marginBottom: 8,
   },
 });
 

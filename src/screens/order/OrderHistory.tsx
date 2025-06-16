@@ -50,6 +50,7 @@ const OrderHistory = () => {
 
   return (
     <View style={styles.container}>
+      <View style={{ paddingTop: 90 }}></View>
       <Text style={styles.title}>Order History</Text>
       <View style={styles.buttonContainer}>
         {statuses.map((status) => (
