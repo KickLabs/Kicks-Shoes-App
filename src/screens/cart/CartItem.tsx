@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { COLORS, SIZES } from "../../constants/theme";
+import { AntDesign, Feather } from "@expo/vector-icons"; // dùng icon đẹp
 
 interface CartItemProps {
   name: string;
@@ -13,73 +14,111 @@ interface CartItemProps {
 
 const CartItem: React.FC<CartItemProps> = ({ name, description, color, size, quantity, price }) => {
   return (
-    <View style={styles.container}>
-      <Image
-        source={{ uri: "https://via.placeholder.com/100x120" }} // Replace with actual image URL
-        style={styles.image}
-      />
-      <View style={styles.details}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.description}>{description}</Text>
-        <Text style={styles.color}>{color}</Text>
-        <Text style={styles.size}>Size {size}</Text>
-        <Text style={styles.quantity}>Quantity {quantity}</Text>
-        <Text style={styles.price}>${price.toFixed(2)}</Text>
+    <View style={styles.card}>
+      <Text style={styles.title}>Your Bag</Text>
+      <Text style={styles.subtitle}>
+        Items in your bag not reserved - check out now to make them yours.
+      </Text>
+
+      <View style={styles.container}>
+        <Image
+          source={{
+            uri: "https://sneakernews.com/wp-content/uploads/2020/12/adidas-Ultra-Boost-1.0-DNA-H68156-8.jpg?w=1140",
+          }}
+          style={styles.image}
+        />
+        <View style={styles.details}>
+          <Text style={styles.name}>{name.toUpperCase()}</Text>
+          <Text style={styles.description}>{description}</Text>
+          <Text style={styles.color}>{color}</Text>
+          <View style={styles.row}>
+            <Text style={styles.meta}>Size {size}</Text>
+            <Text style={styles.meta}>Quantity {quantity}</Text>
+          </View>
+          <Text style={styles.price}>${price.toFixed(2)}</Text>
+        </View>
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.icon}>
+            <AntDesign name="hearto" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.icon}>
+            <Feather name="trash-2" size={20} color={COLORS.gray} />
+          </TouchableOpacity>
+        </View>
       </View>
-      <TouchableOpacity style={styles.heart}>
-        {/* Replace with proper icon from @expo/vector-icons */}
-        <Text>♥</Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#F1F1ED",
+    borderRadius: 18,
+    padding: 16,
+    marginVertical: 12,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 4,
+    color: COLORS.black,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: COLORS.gray,
+    marginBottom: 12,
+  },
   container: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
+    alignItems: "flex-start",
   },
   image: {
     width: 100,
-    height: 120,
-    resizeMode: "contain",
+    height: 100,
+    borderRadius: 16,
   },
   details: {
     flex: 1,
     marginLeft: 12,
   },
   name: {
-    fontSize: SIZES.h3,
+    fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
+    marginBottom: 4,
   },
   description: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
+    marginBottom: 2,
   },
   color: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.gray,
+    marginBottom: 6,
   },
-  size: {
-    fontSize: 12,
-    color: COLORS.gray,
+  row: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 6,
   },
-  quantity: {
-    fontSize: 12,
+  meta: {
+    fontSize: 13,
     color: COLORS.gray,
   },
   price: {
-    fontSize: SIZES.h3,
+    fontSize: 18,
     fontWeight: "bold",
-    color: COLORS.black,
-    marginTop: 4,
+    color: "#2F55D4", // xanh đậm
   },
-  heart: {
-    padding: 8,
+  actions: {
+    marginLeft: 8,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    gap: 10,
+  },
+  icon: {
+    padding: 6,
   },
 });
 

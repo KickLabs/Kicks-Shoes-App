@@ -13,6 +13,7 @@ const newProducts = mockProducts.filter((p) => p.isNew).slice(0, 4);
 const CartScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
+      <View style={{ paddingTop: 90 }}></View>
       <CartHeader />
       <CartItem
         name="DROPSET TRAINER SHOES"
@@ -37,8 +38,7 @@ const CartScreen: React.FC = () => {
           flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "flex-start",
-        }}
-      >
+        }}>
         {newProducts.map((p, idx) => (
           <ProductCard
             key={p.id}

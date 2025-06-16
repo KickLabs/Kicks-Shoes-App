@@ -5,7 +5,6 @@ import { COLORS } from "../../constants/theme";
 const CartHeader: React.FC = () => {
   return (
     <View style={styles.header}>
-        <View style={{ paddingTop: 90 }}></View>
       <Text style={styles.title}>Saving to celebrate</Text>
       <Text style={styles.subtitle}>
         Enjoy up to 60% off thousands of styles during the end of sale. No code needed. Join us - sign in or join now.
