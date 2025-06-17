@@ -35,20 +35,35 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: "transparent",
-    paddingTop: 0,
+    position: "absolute", // Đặt header ở vị trí tuyệt đối
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "transparent", // Background trong suốt
+    zIndex: 1000, // Đảm bảo header nằm trên tất cả các thành phần khác
   },
-  headerWrapper: {},
+  headerWrapper: {
+    backgroundColor: "transparent", // Background trong suốt
+  },
   container: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.9)", // Background trắng với độ trong suốt 90%
     borderRadius: 25,
     marginHorizontal: 12,
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 8,
+    // Thêm shadow để tạo hiệu ứng nổi
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5, // Shadow cho Android
   },
   logoContainer: {
     flex: 1,
