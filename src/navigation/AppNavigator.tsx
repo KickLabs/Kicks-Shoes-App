@@ -6,6 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootStackParamList } from "../types/navigation";
 
 // Import screens
+import ChatScreen from "../screens/chat/ChatScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ProductDetailsScreen from "../screens/product/ProductDetailsScreen";
 import CartScreen from "../screens/cart/CartScreen";
@@ -52,6 +53,12 @@ const CartStackScreen = () => (
   </CartStack.Navigator>
 );
 
+const ChatStackScreen = () => (
+  <CartStack.Navigator screenOptions={{ header: () => <Header /> }}>
+    <CartStack.Screen name="Chat" component={ChatScreen} />
+  </CartStack.Navigator>
+);
+
 const WishlistStackScreen = () => (
   <WishlistStack.Navigator screenOptions={{ header: () => <Header /> }}>
     <WishlistStack.Screen name="Wishlist" component={WishlistScreen} />
@@ -81,6 +88,7 @@ const AppNavigator = () => {
         <Tab.Screen name="Cart" component={CartStackScreen} />
         <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
         <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
+        <Tab.Screen name="Chat" component={ChatStackScreen} />
         <Tab.Screen name="Profile" component={AuthStackScreen} />
       </Tab.Navigator>
     </NavigationContainer>

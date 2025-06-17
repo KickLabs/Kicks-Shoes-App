@@ -10,6 +10,7 @@ const icons = [
   { name: "cart-outline", label: "Cart", route: "Cart" },
   { name: "heart-outline", label: "Wishlist", route: "Wishlist" },
   { name: "time-outline", label: "Orders", route: "OrderHistory" },
+  { name: "chatbox-outline", label: "Chat", route: "Chat" },
   { name: "person-outline", label: "Profile", route: "Profile" },
 ];
 
