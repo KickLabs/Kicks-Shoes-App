@@ -108,7 +108,7 @@ const OrderHistory = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e7e7e3",
     padding: 20,
     justifyContent: "center",
   },

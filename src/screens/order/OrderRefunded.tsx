@@ -43,7 +43,8 @@ const OrderRefunded = () => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    paddingTop: 90,
+    backgroundColor: "#e7e7e3",
     padding: 16,
   },
   title: {
