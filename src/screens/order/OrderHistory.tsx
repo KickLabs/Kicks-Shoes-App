@@ -1,17 +1,53 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 // @ts-ignore
 import { orders } from "../../mockData";
 
 const statuses = [
-  { label: "Pending", route: "OrderPending", status: "pending", icon: "time-outline" },
-  { label: "Processing", route: "OrderProcessing", status: "processing", icon: "sync-outline" },
-  { label: "Shipped", route: "OrderShipped", status: "shipped", icon: "cube-outline" },
-  { label: "Delivered", route: "OrderDelivered", status: "delivered", icon: "checkmark-done-outline" },
-  { label: "Cancelled", route: "OrderCancelled", status: "cancelled", icon: "close-circle-outline" },
-  { label: "Refunded", route: "OrderRefunded", status: "refunded", icon: "cash-outline" },
+  {
+    label: "Pending",
+    route: "OrderPending",
+    status: "pending",
+    icon: "time-outline",
+  },
+  {
+    label: "Processing",
+    route: "OrderProcessing",
+    status: "processing",
+    icon: "sync-outline",
+  },
+  {
+    label: "Shipped",
+    route: "OrderShipped",
+    status: "shipped",
+    icon: "cube-outline",
+  },
+  {
+    label: "Delivered",
+    route: "OrderDelivered",
+    status: "delivered",
+    icon: "checkmark-done-outline",
+  },
+  {
+    label: "Cancelled",
+    route: "OrderCancelled",
+    status: "cancelled",
+    icon: "close-circle-outline",
+  },
+  {
+    label: "Refunded",
+    route: "OrderRefunded",
+    status: "refunded",
+    icon: "cash-outline",
+  },
 ];
 
 const getCount = (status: string) =>
@@ -29,9 +65,13 @@ const sortOptions = [
 const sortOrders = (orders: any[], sort: string) => {
   switch (sort) {
     case "newest":
-      return [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return [...orders].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
     case "oldest":
-      return [...orders].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      return [...orders].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
     case "priceAsc":
       return [...orders].sort((a, b) => a.amount - b.amount);
     case "priceDesc":
@@ -45,7 +85,9 @@ const OrderHistory = () => {
   const navigation = useNavigation();
   const [sort, setSort] = useState("newest");
 
-  const johnOrders = (orders as any[]).filter((order) => order.customer === "John Doe");
+  const johnOrders = (orders as any[]).filter(
+    (order) => order.customer === "John Doe"
+  );
   const sortedOrders = sortOrders(johnOrders, sort);
 
   return (
@@ -63,7 +105,9 @@ const OrderHistory = () => {
               <Ionicons name={status.icon as any} size={28} color="#fff" />
               {getCount(status.status) > 0 && (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{getCount(status.status)}</Text>
+                  <Text style={styles.badgeText}>
+                    {getCount(status.status)}
+                  </Text>
                 </View>
               )}
             </View>
@@ -78,7 +122,13 @@ const OrderHistory = () => {
             style={[styles.sortBtn, sort === opt.value && styles.sortBtnActive]}
             onPress={() => setSort(opt.value)}
           >
-            <Text style={sort === opt.value ? styles.sortTextActive : styles.sortText}>{opt.label}</Text>
+            <Text
+              style={
+                sort === opt.value ? styles.sortTextActive : styles.sortText
+              }
+            >
+              {opt.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -94,7 +144,9 @@ const OrderHistory = () => {
             <Text style={styles.productsTitle}>Products:</Text>
             {item.items.map((product: any, idx: number) => (
               <View key={idx} style={styles.productItem}>
-                <Text>- {product.name} (x{product.quantity}) - ${product.price}</Text>
+                <Text>
+                  - {product.name} (x{product.quantity}) - ${product.price}
+                </Text>
               </View>
             ))}
           </View>
@@ -208,4 +260,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OrderHistory; 
+export default OrderHistory;

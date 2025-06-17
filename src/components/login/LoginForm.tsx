@@ -21,6 +21,10 @@ const LoginForm = () => {
     navigation.navigate("Register" as never);
   };
 
+  const handleLogin = () => {
+    navigation.navigate("Profile" as never);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -48,7 +52,7 @@ const LoginForm = () => {
           Keep me logged in - applies to all log in options below. More info
         </Text>
       </View>
-      <TouchableOpacity style={styles.loginBtn}>
+      <TouchableOpacity onPress={handleLogin} style={styles.loginBtn}>
         <Text style={styles.loginBtnText}>EMAIL LOGIN</Text>
         <Ionicons
           name="arrow-forward"
