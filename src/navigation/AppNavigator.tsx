@@ -20,6 +20,7 @@ import OrderShipped from "../screens/order/OrderShipped";
 import OrderDelivered from "../screens/order/OrderDelivered";
 import OrderCancelled from "../screens/order/OrderCancelled";
 import OrderRefunded from "../screens/order/OrderRefunded";
+import EditProfileScreen from "../screens/profile/EditProfileScreen";
 
 // Import components
 import Header from "../components/layout/Header";
@@ -37,6 +38,8 @@ const AuthStackScreen = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
     <AuthStack.Screen name="Login" component={LoginScreen} />
     <AuthStack.Screen name="Register" component={RegisterScreen} />
+    <AuthStack.Screen name="Profile" component={ProfileScreen} />
+    <AuthStack.Screen name="EditProfile" component={EditProfileScreen} />
   </AuthStack.Navigator>
 );
 
