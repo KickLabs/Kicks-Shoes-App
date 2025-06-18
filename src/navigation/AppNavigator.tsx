@@ -34,6 +34,7 @@ const HomeStack = createStackNavigator();
 const CartStack = createStackNavigator();
 const WishlistStack = createStackNavigator();
 const OrderStack = createStackNavigator();
+const ChatStack = createStackNavigator();
 
 const AuthStackScreen = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -57,9 +58,9 @@ const CartStackScreen = () => (
 );
 
 const ChatStackScreen = () => (
-  <CartStack.Navigator screenOptions={{ header: () => <Header /> }}>
+  <ChatStack.Navigator screenOptions={{ header: () => <Header /> }}>
     <CartStack.Screen name="Chat" component={ChatScreen} />
-  </CartStack.Navigator>
+  </ChatStack.Navigator>
 );
 
 const WishlistStackScreen = () => (
@@ -90,6 +91,7 @@ const TabNavigator = () => (
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
     <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
     <Tab.Screen name="Profile" component={AuthStackScreen} />
+    <Tab.Screen name="Chat" component={ChatStackScreen} />
   </Tab.Navigator>
 );
 
