@@ -44,6 +44,7 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={{ flex: 1 }}>
+      <View style={{ paddingTop: 80 }}>
       {bannerProduct && (
         <Banner
           title="DO IT RIGHT"
@@ -177,6 +178,7 @@ const HomeScreen = () => {
         {reviews.map((r, idx) => (
           <ReviewCard key={idx} {...r} />
         ))}
+      </View>
       </View>
     </ScrollView>
   );

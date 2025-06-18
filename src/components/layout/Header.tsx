@@ -35,20 +35,34 @@ const Header = () => {
 
 const styles = StyleSheet.create({
   safeArea: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: "transparent",
-    paddingTop: 0,
+    zIndex: 1000,
   },
-  headerWrapper: {},
+  headerWrapper: {
+    backgroundColor: "transparent",
+  },
   container: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 1)",
     borderRadius: 25,
     marginHorizontal: 12,
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 8,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   logoContainer: {
     flex: 1,
