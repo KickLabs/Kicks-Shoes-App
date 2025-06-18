@@ -108,7 +108,7 @@ const AppNavigator = () => {
         <Stack.Screen
           name="ListingScreen"
           component={ListingScreen}
-          options={{ headerShown: true, title: "New Drops" }}
+          
         />
       </Stack.Navigator>
     </NavigationContainer>
