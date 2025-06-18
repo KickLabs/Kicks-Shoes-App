@@ -55,9 +55,9 @@ const ListingScreen = () => {
                     : undefined
               }
               onPress={() =>
-  navigation.getParent()?.navigate("ProductDetails", {
-    productId: item.id.toString(),
-  })
+  navigation.navigate("ProductDetails", {
+  productId: item.id.toString(),
+})
 }
             />
           )}
