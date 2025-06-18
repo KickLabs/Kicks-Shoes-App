@@ -62,7 +62,7 @@ const WishlistStackScreen = () => (
 );
 
 const OrderStackScreen = () => (
-  <OrderStack.Navigator screenOptions={{ header: () => <Header /> }}>
+  <OrderStack.Navigator screenOptions={{ headerShown: false }}>
     <OrderStack.Screen name="OrderHistory" component={OrderHistory} />
     <OrderStack.Screen name="OrderPending" component={OrderPending} />
     <OrderStack.Screen name="OrderProcessing" component={OrderProcessing} />
