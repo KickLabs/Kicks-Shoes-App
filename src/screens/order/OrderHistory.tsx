@@ -93,6 +93,9 @@ const OrderHistory = () => {
   return (
     <View style={styles.container}>
       <View style={{ paddingTop: 90 }}></View>
+      <TouchableOpacity onPress={() => navigation.navigate('Profile' as never)} style={{ marginLeft: 8, alignSelf: 'flex-start', zIndex: 10}}>
+        <Ionicons name="arrow-back" size={28} color="#232321" />
+      </TouchableOpacity>
       <Text style={styles.title}>Order History</Text>
       <View style={styles.buttonContainer}>
         {statuses.map((status) => (
@@ -161,7 +164,7 @@ const OrderHistory = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e7e7e3",
     padding: 20,
     justifyContent: "center",
   },

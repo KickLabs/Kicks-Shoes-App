@@ -10,11 +10,11 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 // (Các component ProfileQuickIcon và ProfileMenuItem không thay đổi)
-const ProfileQuickIcon = ({ icon, label }: { icon: string; label: string }) => (
-  <View style={styles.profileIconContainer}>
+const ProfileQuickIcon = ({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) => (
+  <TouchableOpacity style={styles.profileIconContainer} onPress={onPress}>
     <Ionicons name={icon as any} size={28} color="#222" />
     <Text style={styles.profileIconLabel}>{label}</Text>
-  </View>
+  </TouchableOpacity>
 );
 
 const ProfileMenuItem = ({
@@ -61,7 +61,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         {/* === PART 2: QUICK ACCESS ICON ROW (ĐÃ THAY ĐỔI) === */}
         {/* ====================================================== */}
         <View style={styles.iconRow}>
-          <ProfileQuickIcon icon="bag-outline" label="Orders" />
+          <ProfileQuickIcon 
+            icon="bag-outline" 
+            label="Orders" 
+            onPress={() => navigation.navigate("OrderHistory")}
+          />
           <ProfileQuickIcon icon="chatbubble-outline" label="Chat" />
           <ProfileQuickIcon icon="settings-outline" label="Settings" />
         </View>
