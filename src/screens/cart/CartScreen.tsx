@@ -11,14 +11,15 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
 import { StackNavigationProp } from "@react-navigation/stack";
 
-const newProducts = mockProducts.filter((p) => p.isNew).slice(0, 4);
+const newProducts = mockProducts.slice(0, 4);
 
 const CartScreen: React.FC = () => {
   type NavigationProp = StackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
-    const goToCheckoutScreen = () => {
-      navigation.getParent()?.navigate("CheckoutScreen");
-    };
+  const navigation = useNavigation<NavigationProp>();
+  const goToCheckoutScreen = () => {
+    navigation.getParent()?.navigate("CheckoutScreen");
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={{ paddingTop: 90 }}></View>
@@ -37,7 +38,7 @@ const CartScreen: React.FC = () => {
         delivery={6.99}
         total={130.0}
       />
-      <CheckoutButton onPress={goToCheckoutScreen}/>
+      <CheckoutButton onPress={goToCheckoutScreen} />
       <Text style={styles.title}>You may also like</Text>
 
       <View
@@ -46,12 +47,14 @@ const CartScreen: React.FC = () => {
           flexWrap: "wrap",
           justifyContent: "space-between",
           alignItems: "flex-start",
-        }}>
-        {newProducts.map((p, idx) => (
+          padding: 16,
+        }}
+      >
+        {newProducts.map((p) => (
           <ProductCard
-            key={p.id}
-            image={{ uri: p.images[0] }}
-            name={p.name}
+            key={p.sku}
+            image={{ uri: p.inventory[0].images[0] }}
+            name={p.name || "Name"}
             price={`$${p.price.regular}`}
             tag={
               p.isNew
@@ -60,7 +63,11 @@ const CartScreen: React.FC = () => {
                   ? `${p.price.discountPercent}% off`
                   : undefined
             }
-            onPress={() => {}}
+            onPress={() =>
+              navigation
+                .getParent()
+                ?.navigate("ProductDetails", { productId: p.sku })
+            }
           />
         ))}
       </View>
@@ -72,19 +79,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
-  },
-  recommendationContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    rowGap: 16, // khoảng cách giữa các hàng
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontFamily: "Rubik-SemiBold",
     color: COLORS.black,
-    marginBottom: 8,
+    marginTop: 24,
+    marginBottom: 16,
+    marginLeft: 16,
   },
 });
 

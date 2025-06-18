@@ -8,8 +8,6 @@ export type RootStackParamList = {
   Main: undefined;
   Auth: undefined;
   ProductDetails: { productId: string };
-  MainTabs: undefined;
-  ListingScreen: undefined;
   Cart: undefined;
   Wishlist: undefined;
   OrderHistory: undefined;
@@ -22,4 +20,26 @@ export type RootStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   CheckoutScreen: undefined;
+  MainTabs: undefined;
+  ListingScreen: undefined;
 };
+
+export type OrderStatus =
+  | "To Pay"
+  | "To Ship"
+  | "To Receive"
+  | "Completed"
+  | "Returns";
+
+export interface Order {
+  id: number;
+  storeName: string;
+  status: OrderStatus;
+  product: {
+    name: string;
+    image: any;
+    quantity: number;
+    price: number;
+    originalPrice: number;
+  };
+}

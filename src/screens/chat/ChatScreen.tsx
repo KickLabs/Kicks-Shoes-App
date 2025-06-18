@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,46 +8,47 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  ScrollView
-} from 'react-native';
-import { Avatar, ActivityIndicator } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import Markdown from 'react-native-markdown-display';
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import Markdown from "react-native-markdown-display";
 
 const genAI = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY);
 
 type Message = {
   id: string;
   content: string;
-  sender: 'user' | 'ai';
+  sender: "user" | "ai";
   timestamp: string;
 };
 
 const ChatScreen = () => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const flatListRef = useRef<FlatList<Message>>(null);
 
   const generateAIResponse = async (userMessage: string) => {
     try {
       setIsLoading(true);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const result = await model.generateContent({
         contents: [
           {
-            role: 'user',
-            parts: [{ text: userMessage }]
-          }
-        ]
+            role: "user",
+            parts: [{ text: userMessage }],
+          },
+        ],
       });
 
       const response = await result.response;
       return response.text();
     } catch (error) {
-      console.error('Error generating AI response:', error);
-      return 'Sorry, something went wrong.';
+      console.error("Error generating AI response:", error);
+      return "Sorry, something went wrong.";
     } finally {
       setIsLoading(false);
     }
@@ -58,18 +59,18 @@ const ChatScreen = () => {
       const userMessage: Message = {
         id: Date.now().toString(),
         content: newMessage,
-        sender: 'user',
-        timestamp: new Date().toLocaleTimeString()
+        sender: "user",
+        timestamp: new Date().toLocaleTimeString(),
       };
       setMessages((prev) => [...prev, userMessage]);
-      setNewMessage('');
+      setNewMessage("");
 
       const aiText = await generateAIResponse(newMessage);
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: aiText,
-        sender: 'ai',
-        timestamp: new Date().toLocaleTimeString()
+        sender: "ai",
+        timestamp: new Date().toLocaleTimeString(),
       };
       setMessages((prev) => [...prev, aiMessage]);
 
@@ -83,17 +84,20 @@ const ChatScreen = () => {
     <View
       style={[
         styles.messageItem,
-        item.sender === 'user' ? styles.userMessage : styles.aiMessage
+        item.sender === "user" ? styles.userMessage : styles.aiMessage,
       ]}
     >
-      <Avatar.Text
-        size={32}
-        label={item.sender === 'user' ? 'U' : 'AI'}
+      <Image
+        source={{
+          uri: "https://ui-avatars.com/api/?name=AI&background=random",
+        }}
         style={styles.avatar}
       />
       <View style={styles.messageContent}>
-        <Text style={styles.sender}>{item.sender === 'user' ? 'You' : 'AI Assistant'}</Text>
-        {item.sender === 'ai' ? (
+        <Text style={styles.sender}>
+          {item.sender === "user" ? "You" : "AI Assistant"}
+        </Text>
+        {item.sender === "ai" ? (
           <Markdown>{item.content}</Markdown>
         ) : (
           <Text>{item.content}</Text>
@@ -105,7 +109,7 @@ const ChatScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
       <FlatList
@@ -127,7 +131,7 @@ const ChatScreen = () => {
         />
         <TouchableOpacity onPress={handleSendMessage} disabled={isLoading}>
           {isLoading ? (
-            <ActivityIndicator size="small" />
+            <ActivityIndicator size="small" color="#4A69E2" />
           ) : (
             <Icon name="send" size={24} color="#007bff" />
           )}
@@ -140,55 +144,57 @@ const ChatScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 90
+    backgroundColor: "#fff",
+    paddingTop: 90,
   },
   messageList: {
-    padding: 10
+    padding: 10,
   },
   messageItem: {
-    flexDirection: 'row',
-    marginBottom: 10
+    flexDirection: "row",
+    marginBottom: 10,
   },
   userMessage: {
-    alignSelf: 'flex-end',
-    flexDirection: 'row-reverse'
+    alignSelf: "flex-end",
+    flexDirection: "row-reverse",
   },
   aiMessage: {
-    alignSelf: 'flex-start'
+    alignSelf: "flex-start",
   },
   avatar: {
-    backgroundColor: '#007bff',
-    marginRight: 8
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
   },
   messageContent: {
-    maxWidth: '80%',
-    backgroundColor: '#f0f0f0',
+    maxWidth: "80%",
+    backgroundColor: "#f0f0f0",
     padding: 10,
-    borderRadius: 8
+    borderRadius: 8,
   },
   sender: {
-    fontWeight: 'bold'
+    fontWeight: "bold",
   },
   timestamp: {
     fontSize: 10,
-    color: '#888',
-    marginTop: 4
+    color: "#888",
+    marginTop: 4,
   },
   inputContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 10,
     borderTopWidth: 1,
-    borderColor: '#ddd',
-    alignItems: 'center'
+    borderColor: "#ddd",
+    alignItems: "center",
   },
   textInput: {
     flex: 1,
     padding: 10,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 20,
-    marginRight: 10
-  }
+    marginRight: 10,
+  },
 });
 
 export default ChatScreen;
