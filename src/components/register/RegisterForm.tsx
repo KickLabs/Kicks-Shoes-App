@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Image
 } from "react-native";
 import { Formik } from "formik";
-import ShareButton from "../../components/common/button/share.button";
 import CustomCheckbox from "../../components/login/CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 
@@ -18,21 +18,21 @@ interface RegisterFormProps {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#F5F5F0",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 16
   },
   title: {
     fontWeight: "bold",
     fontSize: 22,
-    marginBottom: 4,
+    marginBottom: 4
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-    marginTop: 8,
+    marginTop: 8
   },
   socialBtn: {
     flex: 1,
@@ -42,20 +42,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff"
   },
   orText: {
     textAlign: "center",
     fontWeight: "bold",
     marginVertical: 8,
-    color: "#222",
+    color: "#222"
   },
   label: {
     fontWeight: "bold",
     fontSize: 16,
     marginTop: 8,
     marginBottom: 4,
-    color: "#222",
+    color: "#222"
   },
   input: {
     borderWidth: 1,
@@ -63,49 +63,49 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff"
   },
   genderRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   genderOption: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 16
   },
   checkboxText: {
-    marginLeft: 6,
+    marginLeft: 10,
     fontSize: 13,
     color: "#222",
-    flex: 1,
+    flex: 1
   },
   termsRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 4,
+    marginBottom: 4
   },
   passwordDesc: {
     fontSize: 12,
     color: "#555",
-    marginBottom: 8,
+    marginBottom: 8
   },
   registerRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   registerText: {
     fontSize: 14,
-    color: "#222",
+    color: "#222"
   },
   registerLink: {
     fontSize: 14,
     color: "#222",
     fontWeight: "bold",
-    textDecorationLine: "underline",
+    textDecorationLine: "underline"
   },
   loginBtn: {
     backgroundColor: "#222",
@@ -114,18 +114,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 6,
     paddingVertical: 12,
-    marginBottom: 12,
+    marginBottom: 12
   },
   loginBtnText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
-  },
+    fontSize: 16
+  }
 });
 
 const RegisterForm: React.FC<RegisterFormProps> = ({
   onRegister,
-  onNavigateToLogin,
+  onNavigateToLogin
 }) => {
   const [gender, setGender] = useState("");
   const [agree, setAgree] = useState(false);
@@ -149,13 +149,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           <Text style={{ color: "#222", marginBottom: 4 }}>Sign up with</Text>
           <View style={styles.socialRow}>
             <TouchableOpacity style={styles.socialBtn}>
-              <FontAwesome name="google" size={24} color="#222" />
+              <Image
+                source={require("../../../assets/images/google-logo.png")}
+                style={{ width: 22, height: 22, resizeMode: "contain" }}
+              />
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn}>
               <FontAwesome name="apple" size={24} color="#222" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialBtn}>
-              <FontAwesome name="facebook" size={24} color="#222" />
+              <Image
+                source={require("../../../assets/images/facebook-logo.png")}
+                style={{ width: 24, height: 24, resizeMode: "contain" }}
+              />
             </TouchableOpacity>
           </View>
           <Text style={styles.orText}>OR</Text>
@@ -190,7 +196,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   value={gender === g}
                   onValueChange={() => setGender(g)}
                 />
-                <Text>{g}</Text>
+                <Text style={{ marginLeft: 8 }}>{g}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -236,7 +242,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           </View>
 
           <TouchableOpacity style={styles.loginBtn}>
-            <Text style={styles.loginBtnText}>EMAIL LOGIN</Text>
+            <Text style={styles.loginBtnText}>REGISTER</Text>
             <Ionicons
               name="arrow-forward"
               size={20}
