@@ -66,8 +66,16 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
             label="Orders" 
             onPress={() => navigation.navigate("OrderHistory")}
           />
-          <ProfileQuickIcon icon="chatbubble-outline" label="Chat" />
-          <ProfileQuickIcon icon="settings-outline" label="Settings" />
+          <ProfileQuickIcon 
+            icon="chatbubble-outline" 
+            label="Chat" 
+            onPress={() => navigation.navigate("Chat")} 
+          />
+          <ProfileQuickIcon 
+            icon="settings-outline" 
+            label="Settings" 
+            onPress={() => console.log("Navigate to Settings")} 
+          />
         </View>
         {/* ====================================================== */}
 

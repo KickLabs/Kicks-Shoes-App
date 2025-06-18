@@ -6,6 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootStackParamList } from "../types/navigation";
 
 // Import screens
+import ChatScreen from "../screens/chat/ChatScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ProductDetailsScreen from "../screens/product/ProductDetailsScreen";
 import CartScreen from "../screens/cart/CartScreen";
@@ -34,6 +35,7 @@ const HomeStack = createStackNavigator();
 const CartStack = createStackNavigator();
 const WishlistStack = createStackNavigator();
 const OrderStack = createStackNavigator();
+const ChatStack = createStackNavigator();
 
 const AuthStackScreen = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -54,6 +56,12 @@ const CartStackScreen = () => (
   <CartStack.Navigator screenOptions={{ header: () => <Header /> }}>
     <CartStack.Screen name="Cart" component={CartScreen} />
   </CartStack.Navigator>
+);
+
+const ChatStackScreen = () => (
+  <ChatStack.Navigator screenOptions={{ header: () => <Header /> }}>
+    <CartStack.Screen name="Chat" component={ChatScreen} />
+  </ChatStack.Navigator>
 );
 
 const WishlistStackScreen = () => (
@@ -85,6 +93,7 @@ const TabNavigator = () => (
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
     <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
     <Tab.Screen name="Profile" component={AuthStackScreen} />
+    <Tab.Screen name="Chat" component={ChatStackScreen} />
   </Tab.Navigator>
 );
 

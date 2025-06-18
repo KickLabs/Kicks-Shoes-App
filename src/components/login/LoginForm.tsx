@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Image
 } from "react-native";
 import CustomCheckbox from "./CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
@@ -63,13 +64,19 @@ const LoginForm = () => {
       </TouchableOpacity>
       <View style={styles.socialRow}>
         <TouchableOpacity style={styles.socialBtn}>
-          <FontAwesome name="google" size={24} color="#222" />
+          <Image
+            source={require("../../../assets/images/google-logo.png")}
+            style={{ width: 22, height: 22, resizeMode: "contain" }}
+          />
         </TouchableOpacity>
         <TouchableOpacity style={styles.socialBtn}>
           <FontAwesome name="apple" size={24} color="#222" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.socialBtn}>
-          <FontAwesome name="facebook" size={24} color="#222" />
+          <Image
+            source={require("../../../assets/images/facebook-logo.png")}
+            style={{ width: 24, height: 24, resizeMode: "contain" }}
+          />
         </TouchableOpacity>
       </View>
       <View style={styles.registerRow}>
@@ -88,21 +95,21 @@ const LoginForm = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#F5F5F0",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 16
   },
   title: {
     fontWeight: "bold",
     fontSize: 22,
-    marginBottom: 4,
+    marginBottom: 4
   },
   forgot: {
     color: "#222",
     textDecorationLine: "underline",
     marginBottom: 10,
-    fontWeight: "500",
+    fontWeight: "500"
   },
   input: {
     borderWidth: 1,
@@ -110,18 +117,18 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff"
   },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 10
   },
   checkboxText: {
     marginLeft: 6,
     fontSize: 13,
     color: "#222",
-    flex: 1,
+    flex: 1
   },
   loginBtn: {
     backgroundColor: "#222",
@@ -130,17 +137,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 6,
     paddingVertical: 12,
-    marginBottom: 12,
+    marginBottom: 12
   },
   loginBtnText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 16
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 10
   },
   socialBtn: {
     flex: 1,
@@ -150,29 +157,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    backgroundColor: "#fff",
+    backgroundColor: "#fff"
   },
   registerRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   registerText: {
     fontSize: 14,
-    color: "#222",
+    color: "#222"
   },
   registerLink: {
     fontSize: 14,
     color: "#222",
     fontWeight: "bold",
-    textDecorationLine: "underline",
+    textDecorationLine: "underline"
   },
   terms: {
     fontSize: 12,
     color: "#222",
-    marginTop: 8,
-  },
+    marginTop: 8
+  }
 });
 
 export default LoginForm;
