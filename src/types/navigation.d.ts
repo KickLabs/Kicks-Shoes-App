@@ -8,4 +8,6 @@ export type RootStackParamList = {
   Main: undefined;
   Auth: undefined;
   ProductDetails: { productId: string };
+  MainTabs: undefined;
+  ListingScreen: undefined;
 };

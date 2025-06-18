@@ -20,6 +20,7 @@ import OrderShipped from "../screens/order/OrderShipped";
 import OrderDelivered from "../screens/order/OrderDelivered";
 import OrderCancelled from "../screens/order/OrderCancelled";
 import OrderRefunded from "../screens/order/OrderRefunded";
+import ListingScreen from "@/screens/home/ListingScreen";
 
 // Import components
 import Header from "../components/layout/Header";
@@ -70,21 +71,36 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
+const MainTabNavigator = () => (
+  <Tab.Navigator
+    tabBar={(props) => <Footer {...props} />}
+    screenOptions={{ headerShown: false }}
+  >
+    <Tab.Screen name="Home" component={HomeStackScreen} />
+    <Tab.Screen name="Cart" component={CartStackScreen} />
+    <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
+    <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
+    <Tab.Screen name="Profile" component={AuthStackScreen} />
+  </Tab.Navigator>
+);
+
+
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        tabBar={(props) => <Footer {...props} />}
-        screenOptions={{ headerShown: false }}
-      >
-        <Tab.Screen name="Home" component={HomeStackScreen} />
-        <Tab.Screen name="Cart" component={CartStackScreen} />
-        <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
-        <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
-        <Tab.Screen name="Profile" component={AuthStackScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+
+        <Stack.Screen
+          name="ListingScreen"
+          component={ListingScreen}
+          options={{ headerShown: true, title: "New Drops" }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+
 
 export default AppNavigator;
