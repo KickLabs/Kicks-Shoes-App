@@ -27,6 +27,7 @@ import EditProfileScreen from "../screens/profile/EditProfileScreen";
 // Import components
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import CheckoutScreen from "@/screens/checkout/CheckoutScreen";
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
@@ -110,6 +111,7 @@ const AppNavigator = () => {
           component={ListingScreen}
           options={{ headerShown: true, title: "New Drops" }}
         />
+        <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

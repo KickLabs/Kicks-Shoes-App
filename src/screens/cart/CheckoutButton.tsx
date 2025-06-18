@@ -2,9 +2,13 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { COLORS } from "../../constants/theme";
 
-const CheckoutButton: React.FC = () => {
+type Props = {
+  onPress: () => void;
+};
+
+const CheckoutButton: React.FC<Props> = ({ onPress }) => {
   return (
-    <TouchableOpacity style={styles.button}>
+    <TouchableOpacity style={styles.button}  onPress={onPress}>
       <Text style={styles.buttonText}>CHECKOUT</Text>
     </TouchableOpacity>
   );

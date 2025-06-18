@@ -21,4 +21,5 @@ export type RootStackParamList = {
   OrderRefunded: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  CheckoutScreen: undefined;
 };

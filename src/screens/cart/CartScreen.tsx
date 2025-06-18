@@ -7,10 +7,18 @@ import CheckoutButton from "./CheckoutButton";
 import { COLORS } from "../../constants/theme";
 import { products as mockProducts } from "../../mockData";
 import ProductCard from "@/components/common/ProductCard";
+import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "@/types";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const newProducts = mockProducts.filter((p) => p.isNew).slice(0, 4);
 
 const CartScreen: React.FC = () => {
+  type NavigationProp = StackNavigationProp<RootStackParamList>;
+    const navigation = useNavigation<NavigationProp>();
+    const goToCheckoutScreen = () => {
+      navigation.getParent()?.navigate("CheckoutScreen");
+    };
   return (
     <ScrollView style={styles.container}>
       <View style={{ paddingTop: 90 }}></View>
@@ -29,7 +37,7 @@ const CartScreen: React.FC = () => {
         delivery={6.99}
         total={130.0}
       />
-      <CheckoutButton />
+      <CheckoutButton onPress={goToCheckoutScreen}/>
       <Text style={styles.title}>You may also like</Text>
 
       <View
