@@ -19,6 +19,8 @@ export type RootStackParamList = {
   OrderRefunded: undefined;
   Profile: undefined;
   EditProfile: undefined;
+  MainTabs: undefined;
+  ListingScreen: undefined;
 };
 
 export type OrderStatus =
