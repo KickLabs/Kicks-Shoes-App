@@ -45,6 +45,7 @@ const HomeScreen = () => {
     navigation.getParent()?.navigate("ListingScreen");
   };
   const [bannerIdx, setBannerIdx] = useState(0);
+  
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
@@ -133,7 +134,8 @@ const HomeScreen = () => {
                   ? `${p.price.discountPercent}% off`
                   : undefined
             }
-            onPress={() => {}}
+            onPress={() =>navigation.getParent()?.navigate("ProductDetails", {productId: p.id.toString(),})
+}
           />
         ))}
       </View>

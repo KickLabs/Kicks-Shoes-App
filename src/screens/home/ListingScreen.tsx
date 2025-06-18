@@ -11,6 +11,9 @@ import { products as mockProducts, getProducts } from "../../mockData";
 import ProductCard from "../../components/common/ProductCard";
 import CustomHeader from "@/components/layout/CustomHeader";
 import Footer from "@/components/layout/CustomFooter";
+import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "@/types";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -26,6 +29,9 @@ const ListingScreen = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
+
+  type NavigationProp = StackNavigationProp<RootStackParamList>;
+    const navigation = useNavigation<NavigationProp>();
 
   return (
     <View style={{ flexDirection: "row", flex: 1, paddingTop: 70}}>
@@ -48,7 +54,11 @@ const ListingScreen = () => {
                     ? `${item.price.discountPercent}% off`
                     : undefined
               }
-              onPress={() => {}}
+              onPress={() =>
+  navigation.getParent()?.navigate("ProductDetails", {
+    productId: item.id.toString(),
+  })
+}
             />
           )}
         />

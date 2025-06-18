@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, Button, Alert } from "react-native";
+import { View, Text, StyleSheet, FlatList, Button, Alert, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 // @ts-ignore
 import { orders } from "../../mockData";
 
@@ -17,7 +18,7 @@ const pendingOrders = (orders as Order[]).filter(
   (order) => order.customer === "John Doe" && order.status === "pending"
 );
 
-const OrderPending = () => {
+const OrderPending = () => {  
   const navigation = useNavigation();
 
   const handleCancel = (orderId: number) => {
@@ -39,6 +40,10 @@ const OrderPending = () => {
 
   return (
     <View style={styles.container}>
+      <View style={{ paddingTop: 90 }}></View>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 8, alignSelf: 'flex-start', zIndex: 10 }}>
+        <Ionicons name="arrow-back" size={28} color="#232321" />
+      </TouchableOpacity>
       <Text style={styles.title}>Pending Orders</Text>
       <FlatList
         data={pendingOrders}
@@ -68,7 +73,7 @@ const OrderPending = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#e7e7e3",
     padding: 16,
   },
   title: {
