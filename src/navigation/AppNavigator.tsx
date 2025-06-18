@@ -43,20 +43,6 @@ const AuthStackScreen = () => (
   </AuthStack.Navigator>
 );
 
-const TabNavigator = () => (
-  <Tab.Navigator
-    tabBar={(props) => <Footer {...props} />}
-    screenOptions={{
-      header: () => <Header />, 
-    }}
-  >
-    <Tab.Screen name="Home" component={HomeStackScreen} />
-    <Tab.Screen name="Cart" component={CartStackScreen} />
-    <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
-    <Tab.Screen name="Profile" component={AuthStackScreen} />
-  </Tab.Navigator>
-);
-
 const HomeStackScreen = () => (
   <HomeStack.Navigator screenOptions={{ header: () => <Header /> }}>
     <HomeStack.Screen name="Home" component={HomeScreen} />
@@ -87,17 +73,11 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
-const AppNavigator = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Main" component={TabNavigator} />
-    <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-  </Stack.Navigator>
-);
-
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
     screenOptions={{ headerShown: false }}
+  >
     <Tab.Screen name="Home" component={HomeStackScreen} />
     <Tab.Screen name="Cart" component={CartStackScreen} />
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
@@ -106,6 +86,13 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
+const AppNavigator = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={TabNavigator} />
+        <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

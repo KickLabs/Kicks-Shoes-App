@@ -8,4 +8,15 @@ export type RootStackParamList = {
   Main: undefined;
   Auth: undefined;
   ProductDetails: { productId: string };
+  Cart: undefined;
+  Wishlist: undefined;
+  OrderHistory: undefined;
+  OrderPending: undefined;
+  OrderProcessing: undefined;
+  OrderShipped: undefined;
+  OrderDelivered: undefined;
+  OrderCancelled: undefined;
+  OrderRefunded: undefined;
+  Profile: undefined;
+  EditProfile: undefined;
 };
