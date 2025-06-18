@@ -11,13 +11,16 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
 
 const bannerProduct = mockProducts[0];
-const bannerImages = bannerProduct?.inventory[0]?.images || [];
+const bannerImages = bannerProduct?.inventory?.[0]?.images || [];
 
-const newProducts = mockProducts.slice(0, 4);
+const newProducts = mockProducts
+  .filter((p) => p.inventory?.[0]?.images?.[0])
+  .slice(0, 4);
 
 const brandMap: { [key: string]: (typeof mockProducts)[0] } = {};
 mockProducts.forEach((p) => {
-  if (!brandMap[p.brand as string]) brandMap[p.brand as string] = p;
+  if (p.inventory?.[0]?.images?.[0] && !brandMap[p.brand as string])
+    brandMap[p.brand as string] = p;
 });
 const categories = (Object.values(brandMap) as typeof mockProducts)
   .slice(0, 2)
@@ -130,7 +133,7 @@ const HomeScreen = () => {
                     : undefined
               }
               onPress={() =>
-                navigation.navigate("ProductDetails", { id: p.sku! })
+                navigation.navigate("ProductDetails", { productId: p.sku! })
               }
             />
           ))}

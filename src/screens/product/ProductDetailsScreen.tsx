@@ -25,15 +25,17 @@ const ProductDetailsScreen = () => {
   const product =
     mockProducts.find((p) => p.sku === productId) || mockProducts[0];
   const recommendations = mockProducts
-    .filter((p) => p.sku !== product.sku)
+    .filter((p) => p.sku !== product.sku && p.inventory?.[0]?.images?.[0])
     .slice(0, 4);
   const [selectedImage, setSelectedImage] = useState(
-    product.inventory[0].images[0]
+    product.inventory?.[0]?.images?.[0] || ""
   );
   const [selectedColor, setSelectedColor] = useState(
-    product.variants.colors[0]
+    product.variants?.colors?.[0] || ""
   );
-  const [selectedSize, setSelectedSize] = useState(product.variants.sizes[0]);
+  const [selectedSize, setSelectedSize] = useState(
+    product.variants?.sizes?.[0] || ""
+  );
   const [favourite, setFavourite] = useState(false);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
