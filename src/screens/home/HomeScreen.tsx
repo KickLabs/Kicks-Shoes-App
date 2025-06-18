@@ -7,6 +7,8 @@ import ReviewCard from "../../components/common/ReviewCard";
 import { COLORS } from "../../constants/theme";
 import { products as mockProducts } from "../../mockData";
 import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "@/types";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const bannerProduct = mockProducts.find((p) => p.name.includes("Air Max 270"));
 const bannerImages = bannerProduct ? bannerProduct.images : [];
@@ -37,8 +39,13 @@ const reviews = [
 ];
 
 const HomeScreen = () => {
+  type NavigationProp = StackNavigationProp<RootStackParamList>;
+  const navigation = useNavigation<NavigationProp>();
+  const goToListingScreen = () => {
+    navigation.getParent()?.navigate("ListingScreen");
+  };
   const [bannerIdx, setBannerIdx] = useState(0);
-  const navigation = useNavigation();
+  
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
@@ -89,6 +96,7 @@ const HomeScreen = () => {
             paddingVertical: 12,
             marginLeft: 12,
           }}
+          onPress={goToListingScreen}
         >
           <Text
             style={{
@@ -126,7 +134,8 @@ const HomeScreen = () => {
                   ? `${p.price.discountPercent}% off`
                   : undefined
             }
-            onPress={() => navigation.navigate("ProductDetails", { productId: p.id.toString() })}
+            onPress={() =>navigation.getParent()?.navigate("ProductDetails", {productId: p.id.toString(),})
+}
           />
         ))}
       </View>

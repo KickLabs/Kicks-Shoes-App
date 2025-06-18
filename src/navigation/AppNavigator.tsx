@@ -20,6 +20,7 @@ import OrderShipped from "../screens/order/OrderShipped";
 import OrderDelivered from "../screens/order/OrderDelivered";
 import OrderCancelled from "../screens/order/OrderCancelled";
 import OrderRefunded from "../screens/order/OrderRefunded";
+import ListingScreen from "@/screens/home/ListingScreen";
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
 
 // Import components
@@ -73,6 +74,7 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
+
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
@@ -86,15 +88,24 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
+
 const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
+
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
+        <Stack.Screen
+          name="ListingScreen"
+          component={ListingScreen}
+          options={{ headerShown: true, title: "New Drops" }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+
 
 export default AppNavigator;
