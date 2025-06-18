@@ -6,6 +6,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { RootStackParamList } from "../types/navigation";
 
 // Import screens
+import ChatScreen from "../screens/chat/ChatScreen";
 import HomeScreen from "../screens/home/HomeScreen";
 import ProductDetailsScreen from "../screens/product/ProductDetailsScreen";
 import CartScreen from "../screens/cart/CartScreen";
@@ -66,6 +67,12 @@ const HomeStackScreen = () => (
 const CartStackScreen = () => (
   <CartStack.Navigator screenOptions={{ header: () => <Header /> }}>
     <CartStack.Screen name="Cart" component={CartScreen} />
+  </CartStack.Navigator>
+);
+
+const ChatStackScreen = () => (
+  <CartStack.Navigator screenOptions={{ header: () => <Header /> }}>
+    <CartStack.Screen name="Chat" component={ChatScreen} />
   </CartStack.Navigator>
 );
 
