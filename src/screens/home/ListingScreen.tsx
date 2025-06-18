@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { products as mockProducts, getProducts } from "../../mockData";
 import ProductCard from "../../components/common/ProductCard";
-import CustomHeader from "@/components/layout/CustomHeader";
+import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/CustomFooter";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
@@ -164,8 +164,8 @@ const renderFooter = () => (
 
 
   return (
-    <View style={{ flexDirection: "row", flex: 1, paddingTop: 70 }}>
-      <CustomHeader />
+    <View style={{ flexDirection: "row", flex: 1, paddingTop: 90 }}>
+      <Header />
       <View style={{ flex: 1, padding: 16 }}>
         <FlatList
   data={currentProducts}
