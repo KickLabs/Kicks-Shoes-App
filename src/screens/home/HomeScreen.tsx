@@ -42,8 +42,15 @@ const reviews = [
 ];
 
 const HomeScreen = () => {
+
+  type NavigationProp = StackNavigationProp<RootStackParamList>;
+  const navigation = useNavigation<NavigationProp>();
+  const goToListingScreen = () => {
+    navigation.getParent()?.navigate("ListingScreen");
+  };
+  
   const [bannerIdx, setBannerIdx] = useState(0);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
@@ -94,6 +101,7 @@ const HomeScreen = () => {
               paddingVertical: 12,
               marginLeft: 12,
             }}
+             onPress={goToListingScreen}
           >
             <Text
               style={{
