@@ -17,6 +17,7 @@ import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { products as mockProducts } from "../../mockData";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
+import ProductCard from "../../components/common/ProductCard";
 
 const ProductDetailsScreen = () => {
   const route =
@@ -38,6 +39,10 @@ const ProductDetailsScreen = () => {
   );
   const [favourite, setFavourite] = useState(false);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [imageIndex, setImageIndex] = useState(0);
+  const images =
+    product.inventory.find((item) => item.color === selectedColor)?.images ||
+    [];
 
   const unavailableSizes = product.inventory
     .filter((item) => !item.isAvailable || item.quantity === 0)
@@ -70,342 +75,350 @@ const ProductDetailsScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={{ paddingTop: 90 }}></View>
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={{ marginLeft: 8, alignSelf: "flex-start", zIndex: 10 }}
-      >
-        <Ionicons name="arrow-back" size={28} color="#232321" />
-      </TouchableOpacity>
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: selectedImage }}
-          style={styles.image}
-          resizeMode="contain"
-        />
-        <TouchableOpacity
-          style={styles.favoriteButton}
-          onPress={() => setFavourite(!favourite)}
-        >
-          <Ionicons
-            name={favourite ? "heart" : "heart-outline"}
-            size={24}
-            color={favourite ? COLORS.error : COLORS.black}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.thumbnailContainer}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={
-            product.inventory.find((item) => item.color === selectedColor)
-              ?.images || []
-          }
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.thumbnailButton,
-                selectedImage === item && styles.selectedThumbnail,
-              ]}
-              onPress={() => setSelectedImage(item)}
-            >
-              <Image source={{ uri: item }} style={styles.thumbnail} />
-            </TouchableOpacity>
-          )}
-        />
-      </View>
-
-      <View style={styles.detailsContainer}>
-        <Text style={styles.brand}>{product.brand}</Text>
-        <Text style={styles.name}>{product.name}</Text>
-        <Text style={styles.description}>{product.description}</Text>
-
-        <View style={styles.priceContainer}>
-          <Text style={styles.price}>${getPrice().regular}</Text>
-          {getPrice().discounted && (
-            <Text style={styles.discountedPrice}>
-              ${getPrice().discounted!.toFixed(2)}
-            </Text>
-          )}
-        </View>
-
-        <Text style={styles.sectionTitle}>Select Color</Text>
-        <View style={styles.colorContainer}>
-          {product.variants.colors.map((color) => (
-            <TouchableOpacity
-              key={color}
-              style={[
-                styles.colorButton,
-                { backgroundColor: color.toLowerCase() },
-                selectedColor === color && styles.selectedColor,
-              ]}
-              onPress={() => {
-                setSelectedColor(color);
-                const newVariant = product.inventory.find(
-                  (item) => item.color === color
-                );
-                if (newVariant) {
-                  setSelectedImage(newVariant.images[0]);
-                }
-              }}
-            />
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>Select Size</Text>
-        <View style={styles.sizeContainer}>
-          {product.variants.sizes.map((size) => (
-            <TouchableOpacity
-              key={size}
-              style={[
-                styles.sizeButton,
-                selectedSize === size && styles.selectedSize,
-                unavailableSizes.includes(size.toString()) &&
-                  styles.unavailableSize,
-              ]}
-              onPress={() =>
-                !unavailableSizes.includes(size.toString()) &&
-                setSelectedSize(size)
-              }
-              disabled={unavailableSizes.includes(size.toString())}
-            >
-              <Text
-                style={[
-                  styles.sizeText,
-                  selectedSize === size && styles.selectedSizeText,
-                  unavailableSizes.includes(size.toString()) &&
-                    styles.unavailableSizeText,
-                ]}
-              >
-                {size}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.addToCartButton}
-          onPress={handleAddToCart}
-        >
-          <Text style={styles.addToCartText}>Add to Cart</Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-          You May Also Like
-        </Text>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={recommendations}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.recommendationCard}
-              onPress={() =>
-                navigation.replace("ProductDetails", { id: item.sku! })
-              }
-            >
+    <>
+      <Header />
+      <ScrollView style={styles.container}>
+        <View style={{ paddingTop: 55 }}>
+          <View style={styles.mainImageWrapper}>
+            <View style={styles.mainImageBox}>
               <Image
-                source={{ uri: item.inventory[0].images[0] }}
-                style={styles.recommendationImage}
+                source={{ uri: images[imageIndex] || selectedImage }}
+                style={styles.mainImage}
+                resizeMode="contain"
               />
-              <Text style={styles.recommendationName} numberOfLines={2}>
-                {item.name}
-              </Text>
-              <Text style={styles.recommendationPrice}>
-                ${item.price.regular}
-              </Text>
+            </View>
+            <View style={styles.sliderDots}>
+              {images.map((_, idx) => (
+                <View
+                  key={idx}
+                  style={[styles.dot, imageIndex === idx && styles.activeDot]}
+                />
+              ))}
+            </View>
+          </View>
+          <View style={styles.thumbnailContainerNew}>
+            {images.map((img, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.thumbnailButtonNew,
+                  imageIndex === idx && styles.selectedThumbnailNew,
+                ]}
+                onPress={() => {
+                  setImageIndex(idx);
+                  setSelectedImage(img);
+                }}
+              >
+                <Image source={{ uri: img }} style={styles.thumbnailNew} />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.detailsContainerNew}>
+            {(product.isNew || (product.tags && product.tags.length > 0)) && (
+              <View style={styles.tagBox}>
+                <Text style={styles.tagText}>
+                  {product.isNew ? "New Release" : product.tags[0]}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.productName}>
+              {(product.name || "").toUpperCase()}
+            </Text>
+            <Text style={styles.productPrice}>${getPrice().regular}</Text>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitleNew}>Color</Text>
+            </View>
+            <View style={styles.colorContainerNew}>
+              {product.variants.colors.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorCircle,
+                    { backgroundColor: color.toLowerCase() },
+                    selectedColor === color && styles.selectedColorCircle,
+                  ]}
+                  onPress={() => {
+                    setSelectedColor(color);
+                    const newVariant = product.inventory.find(
+                      (item) => item.color === color
+                    );
+                    if (newVariant) {
+                      setSelectedImage(newVariant.images[0]);
+                      setImageIndex(0);
+                    }
+                  }}
+                />
+              ))}
+            </View>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitleNew}>Size</Text>
+              <TouchableOpacity>
+                <Text style={styles.sizeChart}>SIZE CHART</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.sizeContainerNew}>
+              {product.variants.sizes.map((size) => (
+                <TouchableOpacity
+                  key={size}
+                  style={[
+                    styles.sizeBox,
+                    selectedSize === size && styles.selectedSizeBox,
+                    unavailableSizes.includes(size.toString()) &&
+                      styles.unavailableSizeBox,
+                  ]}
+                  onPress={() =>
+                    !unavailableSizes.includes(size.toString()) &&
+                    setSelectedSize(size)
+                  }
+                  disabled={unavailableSizes.includes(size.toString())}
+                >
+                  <Text
+                    style={[
+                      styles.sizeTextNew,
+                      selectedSize === size && styles.selectedSizeTextNew,
+                      unavailableSizes.includes(size.toString()) &&
+                        styles.unavailableSizeTextNew,
+                    ]}
+                  >
+                    {size}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={styles.addToCartButtonNew}
+                onPress={handleAddToCart}
+              >
+                <Text style={styles.addToCartTextNew}>ADD TO CART</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.heartButton}
+                onPress={() => setFavourite(!favourite)}
+              >
+                <Ionicons
+                  name={favourite ? "heart" : "heart-outline"}
+                  size={24}
+                  color={favourite ? COLORS.error : COLORS.white}
+                />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.buyNowButton}>
+              <Text style={styles.buyNowText}>BUY IT NOW</Text>
             </TouchableOpacity>
-          )}
-        />
-      </View>
-    </ScrollView>
+            <Text style={[styles.sectionTitleNew, { marginTop: 32 }]}>
+              ABOUT THE PRODUCT
+            </Text>
+            <Text style={styles.productDesc}>{product.description}</Text>
+            <Text style={[styles.sectionTitleNew, { marginTop: 24 }]}>
+              You May Also Like
+            </Text>
+            <View style={styles.recommendationsGrid}>
+              {recommendations.map((item) => (
+                <ProductCard
+                  key={item.sku}
+                  image={{ uri: item.inventory[0]?.images[0] || "" }}
+                  name={item.name || ""}
+                  price={item.price.regular.toString()}
+                  onPress={() =>
+                    navigation.replace("ProductDetails", {
+                      productId: item.sku!,
+                    })
+                  }
+                />
+              ))}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white,
+  container: { flex: 1, backgroundColor: "#e7e7e3" },
+  mainImageWrapper: { alignItems: "center", marginTop: 48 },
+  mainImageBox: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 18,
+    width: "95%",
+    alignSelf: "center",
+    height: 420,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
   },
-  imageContainer: {
+  mainImage: {
     width: "100%",
-    height: 300,
-    position: "relative",
+    height: 380,
+    borderRadius: 12,
+    resizeMode: "contain",
   },
-  image: {
-    width: "100%",
-    height: "100%",
+  sliderDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
   },
-  favoriteButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
-    padding: 8,
-    ...Platform.select({
-      ios: {
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      },
-      android: {
-        elevation: 5,
-      },
-    }),
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.gray,
+    marginHorizontal: 2,
   },
-  thumbnailContainer: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+  activeDot: { backgroundColor: "#4A69E2" },
+  thumbnailContainerNew: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginVertical: 8,
+    marginLeft: 24,
   },
-  thumbnailButton: {
-    marginRight: 10,
+  thumbnailButtonNew: {
+    marginHorizontal: 4,
     borderRadius: 8,
-    overflow: "hidden",
     borderWidth: 2,
     borderColor: "transparent",
+    overflow: "hidden",
   },
-  selectedThumbnail: {
-    borderColor: COLORS.primary,
+  selectedThumbnailNew: { borderColor: "#4A69E2" },
+  thumbnailNew: { width: 48, height: 48, borderRadius: 8 },
+  detailsContainerNew: {
+    backgroundColor: COLORS.white,
+    borderRadius: 18,
+    marginHorizontal: 12,
+    padding: 18,
+    marginTop: 8,
+    marginBottom: 24,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  thumbnail: {
-    width: 60,
-    height: 60,
+  tagBox: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.blue,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginBottom: 8,
   },
-  detailsContainer: {
-    padding: 15,
-  },
-  brand: {
-    fontSize: 16,
-    color: COLORS.gray,
-    marginBottom: 5,
-    fontFamily: "Rubik-Regular",
-  },
-  name: {
-    fontSize: 24,
-    color: COLORS.black,
-    marginBottom: 10,
+  tagText: { color: COLORS.white, fontFamily: "Rubik-Medium", fontSize: 13 },
+  productName: {
     fontFamily: "Rubik-Bold",
+    fontSize: 20,
+    color: COLORS.black,
+    marginBottom: 4,
+    textTransform: "uppercase",
   },
-  description: {
+  productPrice: {
+    fontFamily: "Rubik-Bold",
+    fontSize: 22,
+    color: COLORS.blue,
+    marginBottom: 8,
+  },
+  productDesc: {
+    fontFamily: "Rubik-Regular",
     fontSize: 14,
     color: COLORS.gray,
-    marginBottom: 15,
+    marginBottom: 16,
     lineHeight: 20,
-    fontFamily: "Rubik-Regular",
   },
-  priceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  price: {
-    fontSize: 24,
-    color: COLORS.black,
-    fontFamily: "Rubik-Bold",
-    marginRight: 10,
-  },
-  discountedPrice: {
-    fontSize: 20,
-    color: COLORS.gray,
-    textDecorationLine: "line-through",
-    fontFamily: "Rubik-Regular",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: COLORS.black,
-    marginBottom: 10,
+  sectionTitleNew: {
     fontFamily: "Rubik-Medium",
+    fontSize: 16,
+    color: COLORS.black,
+    marginBottom: 8,
   },
-  colorContainer: {
+  rowBetween: {
     flexDirection: "row",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  colorButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: COLORS.gray,
-  },
-  selectedColor: {
+  colorContainerNew: { flexDirection: "row", marginBottom: 16 },
+  colorCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: COLORS.gray,
+    marginRight: 12,
   },
-  sizeContainer: {
+  selectedColorCircle: { borderColor: "#4A69E2", borderWidth: 3 },
+  sizeContainerNew: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  sizeButton: {
-    width: 45,
-    height: 45,
-    borderRadius: 22.5,
-    borderWidth: 1,
+  sizeBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1.5,
     borderColor: COLORS.gray,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
     marginBottom: 10,
+    backgroundColor: COLORS.white,
   },
-  selectedSize: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  unavailableSize: {
-    backgroundColor: COLORS.lightGray,
-    borderColor: COLORS.lightGray,
-  },
-  sizeText: {
+  selectedSizeBox: { borderColor: "#4A69E2", backgroundColor: "#4A69E2" },
+  unavailableSizeBox: { backgroundColor: "#D2D1D3", borderColor: "#D2D1D3" },
+  sizeTextNew: {
     fontSize: 16,
     color: COLORS.black,
     fontFamily: "Rubik-Regular",
   },
-  selectedSizeText: {
-    color: COLORS.white,
-  },
-  unavailableSizeText: {
+  selectedSizeTextNew: { color: COLORS.white, fontFamily: "Rubik-Bold" },
+  unavailableSizeTextNew: { color: COLORS.gray },
+  sizeChart: {
     color: COLORS.gray,
+    fontSize: 13,
+    fontFamily: "Rubik-Medium",
+    textDecorationLine: "underline",
   },
-  addToCartButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 25,
-    padding: 15,
+  actionRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  addToCartButtonNew: {
+    flex: 1,
+    backgroundColor: COLORS.black,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: "center",
-    marginTop: 10,
+    marginRight: 8,
+    height: 56,
+    justifyContent: "center",
   },
-  addToCartText: {
+  addToCartTextNew: {
     color: COLORS.white,
-    fontSize: 18,
-    fontFamily: "Rubik-Medium",
-  },
-  recommendationCard: {
-    width: 150,
-    marginRight: 15,
-  },
-  recommendationImage: {
-    width: "100%",
-    height: 150,
-    borderRadius: 8,
-  },
-  recommendationName: {
-    fontSize: 14,
-    color: COLORS.black,
-    marginTop: 5,
-    fontFamily: "Rubik-Regular",
-  },
-  recommendationPrice: {
     fontSize: 16,
-    color: COLORS.primary,
-    marginTop: 5,
     fontFamily: "Rubik-Medium",
+  },
+  heartButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: COLORS.black,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+  },
+  buyNowButton: {
+    backgroundColor: COLORS.blue,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginTop: 12,
+  },
+  buyNowText: { color: COLORS.white, fontSize: 16, fontFamily: "Rubik-Medium" },
+  recommendationsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 10,
   },
 });
 
