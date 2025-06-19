@@ -31,11 +31,11 @@ const ListingScreen = () => {
   };
 
   type NavigationProp = StackNavigationProp<RootStackParamList>;
-    const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View style={{ flexDirection: "row", flex: 1, paddingTop: 70}}>
-      <CustomHeader/>
+    <View style={{ flexDirection: "row", flex: 1, paddingTop: 70 }}>
+      <CustomHeader />
       <View style={{ flex: 1, padding: 16 }}>
         <FlatList
           data={currentProducts}
@@ -55,10 +55,10 @@ const ListingScreen = () => {
                     : undefined
               }
               onPress={() =>
-  navigation.navigate("ProductDetails", {
-  productId: item.id.toString(),
-})
-}
+                navigation.navigate("ProductDetails", {
+                  productId: item.id.toString(),
+                })
+              }
             />
           )}
         />
@@ -91,7 +91,6 @@ const ListingScreen = () => {
         </View>
         {/* <Footer/> */}
       </View>
-      
     </View>
   );
 };
