@@ -60,8 +60,8 @@ const CartStackScreen = () => (
 );
 
 const ChatStackScreen = () => (
-  <ChatStack.Navigator screenOptions={{ header: () => <Header /> }}>
-    <CartStack.Screen name="Chat" component={ChatScreen} />
+  <ChatStack.Navigator screenOptions={{ headerShown: false }}>
+    <ChatStack.Screen name="Chat" component={ChatScreen} />
   </ChatStack.Navigator>
 );
 
@@ -83,12 +83,10 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
-
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
-    screenOptions={{ headerShown: false }}
-  >
+    screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeStackScreen} />
     <Tab.Screen name="Cart" component={CartStackScreen} />
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
@@ -98,24 +96,17 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
-
 const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        <Stack.Screen
-          name="ListingScreen"
-          component={ListingScreen}
-        />
+        <Stack.Screen name="ListingScreen" component={ListingScreen} />
         <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
-
-
 
 export default AppNavigator;
