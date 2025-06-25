@@ -171,11 +171,24 @@ const FilterModal = ({ visible, onClose, onApply }: any) => {
               setPrice(500); // Reset giá trị slider
             }}
           >
-            <Text>RESET</Text>
+            <Text
+              style={{
+                textAlign: "center"
+              }}
+            >
+              RESET
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.apply} onPress={handleApply}>
-            <Text style={{ color: "white" }}>APPLY</Text>
+            <Text
+              style={{
+                color: "white",
+                textAlign: "center"
+              }}
+            >
+              APPLY
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -265,11 +278,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     borderColor: "#000",
-    borderRadius: 6
+    borderRadius: 6,
+    width: "47%"
   },
   apply: {
     padding: 10,
     backgroundColor: "#000",
-    borderRadius: 6
+    borderRadius: 6,
+    width: "47%"
   }
 });
