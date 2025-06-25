@@ -23,6 +23,7 @@ import OrderCancelled from "../screens/order/OrderCancelled";
 import OrderRefunded from "../screens/order/OrderRefunded";
 import ListingScreen from "@/screens/home/ListingScreen";
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import SearchScreen from "../screens/home/SearchScreen";
 
 // Import components
 import Header from "../components/layout/Header";
@@ -83,13 +84,13 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
-
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
     screenOptions={{ headerShown: false }}
   >
     <Tab.Screen name="Home" component={HomeStackScreen} />
+    <Tab.Screen name="ListingScreen" component={ListingScreen} />
     <Tab.Screen name="Cart" component={CartStackScreen} />
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
     <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
@@ -98,24 +99,18 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
-
 const AppNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        <Stack.Screen
-          name="ListingScreen"
-          component={ListingScreen}
-        />
+        <Stack.Screen name="ListingScreen" component={ListingScreen} />
         <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
+        <Stack.Screen name="SearchScreen" component={SearchScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
-
-
 
 export default AppNavigator;

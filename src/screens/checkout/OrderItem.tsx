@@ -12,7 +12,14 @@ interface OrderItem {
   price: number;
 }
 
-const OrderItem: React.FC<OrderItem> = ({ name, description, color, size, quantity, price }) => {
+const OrderItem: React.FC<OrderItem> = ({
+  name,
+  description,
+  color,
+  size,
+  quantity,
+  price,
+}) => {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Order Detail</Text>
@@ -50,9 +57,10 @@ const OrderItem: React.FC<OrderItem> = ({ name, description, color, size, quanti
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#F1F1ED",
-    borderRadius: 18,
     padding: 16,
-    marginVertical: 12,
+    borderRadius: 16,
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
   title: {
     fontSize: 20,

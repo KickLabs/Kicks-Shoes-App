@@ -77,21 +77,35 @@ const ProductDetailsScreen = () => {
   return (
     <>
       <Header />
-      <ScrollView style={styles.container}>
-        <View style={{ paddingTop: 90 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        style={styles.container}
+      >
+        <View style={{ paddingTop: Platform.OS === "ios" ? 110 : 90 }}>
           <View style={styles.mainImageWrapper}>
             <View style={styles.topButtonsRow}>
               <TouchableOpacity
                 style={styles.backButtonOverlay}
                 onPress={() => navigation.goBack()}
               >
-                <Ionicons name="arrow-back" size={35} color="#232321" style={styles.iconWithStroke} />
+                <Ionicons
+                  name="arrow-back"
+                  size={35}
+                  color="#232321"
+                  style={styles.iconWithStroke}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shareButtonOverlay}
-                onPress={() => Alert.alert('Share', 'Chia sẻ sản phẩm!')}
+                onPress={() => Alert.alert("Share", "Chia sẻ sản phẩm!")}
               >
-                <Ionicons name="arrow-redo-outline" size={35} color="#232321" style={styles.iconWithStroke} />
+                <Ionicons
+                  name="arrow-redo-outline"
+                  size={35}
+                  color="#232321"
+                  style={styles.iconWithStroke}
+                />
               </TouchableOpacity>
             </View>
             <View style={styles.mainImageBox}>
@@ -251,9 +265,8 @@ const ProductDetailsScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#e7e7e3" },
-  mainImageWrapper: { alignItems: "center", paddingTop: 70  },
+  mainImageWrapper: { alignItems: "center", paddingTop: 70 },
   mainImageBox: {
-    
     backgroundColor: "#f5f5f5",
     borderRadius: 18,
     width: "95%",
@@ -436,14 +449,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   topButtonsRow: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     left: 0,
     right: 0,
     zIndex: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
   },
   backButtonOverlay: {
@@ -455,10 +468,9 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.7)",
     borderRadius: 23,
     padding: 4,
-
   },
   iconWithStroke: {
-    textShadowColor: '#232321',
+    textShadowColor: "#232321",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 2,
   },

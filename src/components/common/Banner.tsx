@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import { COLORS, SIZES, SHADOWS } from "../../constants/theme";
 
 type BannerProps = {
@@ -72,7 +79,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 12,
+    marginTop: Platform.OS === "ios" ? 40 : 12,
     marginBottom: 12,
     marginHorizontal: 12,
   },

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, ScrollView, Text } from "react-native";
+import { View, StyleSheet, ScrollView, Text, Platform } from "react-native";
 import CartHeader from "./CartHeader";
 import CartItem from "./CartItem";
 import OrderSummary from "./OrderSummaryWithPromo";
@@ -21,8 +21,12 @@ const CartScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={{ paddingTop: 90 }}></View>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      style={styles.container}
+    >
+      <View style={{ paddingTop: Platform.OS === "ios" ? 120 : 90 }}></View>
       <CartHeader />
       <CartItem
         name="DROPSET TRAINER SHOES"
@@ -38,7 +42,9 @@ const CartScreen: React.FC = () => {
         delivery={6.99}
         total={130.0}
       />
-      <CheckoutButton onPress={goToCheckoutScreen} />
+      <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+        <CheckoutButton onPress={goToCheckoutScreen} />
+      </View>
       <Text style={styles.title}>You may also like</Text>
 
       <View
@@ -84,8 +90,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Rubik-SemiBold",
     color: COLORS.black,
-    marginTop: 24,
-    marginBottom: 16,
     marginLeft: 16,
   },
 });

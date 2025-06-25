@@ -12,7 +12,14 @@ interface CartItemProps {
   price: number;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ name, description, color, size, quantity, price }) => {
+const CartItem: React.FC<CartItemProps> = ({
+  name,
+  description,
+  color,
+  size,
+  quantity,
+  price,
+}) => {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Your Bag</Text>
@@ -55,7 +62,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1F1ED",
     borderRadius: 18,
     padding: 16,
-    marginVertical: 12,
+    marginVertical: 8,
+    marginHorizontal: 16,
   },
   title: {
     fontSize: 18,

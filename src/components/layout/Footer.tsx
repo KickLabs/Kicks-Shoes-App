@@ -7,6 +7,7 @@ import { COLORS } from "../../constants/theme";
 
 const icons = [
   { name: "home", label: "Home", route: "Home" },
+  { name: "grid-outline", label: "Product", route: "ListingScreen" },
   { name: "cart-outline", label: "Cart", route: "Cart" },
   { name: "heart-outline", label: "Wishlist", route: "Wishlist" },
   { name: "person-outline", label: "Profile", route: "Profile" },

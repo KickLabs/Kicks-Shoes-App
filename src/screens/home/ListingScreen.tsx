@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   Dimensions,
   Image,
+  Platform,
 } from "react-native";
 import { products as mockProducts, getProducts } from "../../mockData";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/CustomFooter";
+import Footer from "@/components/layout/Footer";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -44,6 +45,7 @@ const ListingScreen = () => {
           overflow: "hidden",
           marginBottom: 16,
           position: "relative",
+          marginTop: Platform.OS === "ios" ? 30 : 0,
         }}
       >
         <Image
@@ -163,36 +165,41 @@ const ListingScreen = () => {
   );
 
   return (
-    <View style={{ flexDirection: "row", flex: 1, paddingTop: 90 }}>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header />
-      <View style={{ flex: 1, padding: 16 }}>
-        <FlatList
-          data={currentProducts}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          // keyExtractor={(item) => item.}
-          renderItem={({ item }) => (
-            <ProductCard
-              image={{ uri: item.mainImage }}
-              name={item.name || "Name"}
-              price={`$${item.price.regular}`}
-              tag={
-                item.isNew
-                  ? "New"
-                  : item.price.isOnSale
-                    ? `${item.price.discountPercent}% off`
-                    : undefined
-              }
-              onPress={() =>
-                navigation.navigate("ProductDetails", { productId: item.sku })
-              }
-            />
-          )}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      <FlatList
+        data={currentProducts}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        renderItem={({ item }) => (
+          <ProductCard
+            image={{ uri: item.mainImage }}
+            name={item.name || "Name"}
+            price={`$${item.price.regular}`}
+            tag={
+              item.isNew
+                ? "New"
+                : item.price.isOnSale
+                  ? `${item.price.discountPercent}% off`
+                  : undefined
+            }
+            onPress={() =>
+              navigation.navigate("ProductDetails", {
+                productId: String(item.sku),
+              })
+            }
+          />
+        )}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: 100,
+          paddingHorizontal: 16,
+          paddingBottom: 16,
+          backgroundColor: "#fff",
+        }}
+      />
     </View>
   );
 };
