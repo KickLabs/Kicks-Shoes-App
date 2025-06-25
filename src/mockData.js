@@ -40,7 +40,7 @@ export const products = [
       },
       {
         size: 39,
-        color: "#fff",
+        color: "Black",
         quantity: 10,
         isAvailable: true,
         images: [
