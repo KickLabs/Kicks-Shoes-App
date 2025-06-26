@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import {
-  ScrollView,
   View,
   Text,
   FlatList,
   TouchableOpacity,
   Dimensions,
-  Image
+  Image,
+  Platform,
 } from "react-native";
-import { products as mockProducts, getProducts } from "../../mockData";
+import { products as mockProducts } from "../../mockData";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import FilterModal from "@/components/common/FilterModal";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
@@ -22,14 +23,13 @@ const ListingScreen = () => {
   const pageSize = 6;
   const [currentPage, setCurrentPage] = useState(1);
   const [filterVisible, setFilterVisible] = useState(false);
-  const totalProducts = mockProducts.length;
 
   const [filters, setFilters] = useState({
     sizes: [],
     colors: [],
     categories: [],
     brands: [],
-    price: 500
+    price: 500,
   });
 
   const filterProducts = (products) => {
@@ -40,7 +40,7 @@ const ListingScreen = () => {
           filters.sizes.includes(inventoryItem.size);
         const matchesColor =
           filters.colors.length === 0 ||
-          filters.colors.includes(inventoryItem.color.toLowerCase()); // Normalize case
+          filters.colors.includes(inventoryItem.color.toLowerCase());
         return matchesSize && matchesColor && inventoryItem.isAvailable;
       });
 
@@ -61,7 +61,6 @@ const ListingScreen = () => {
   const filteredProducts = filterProducts(mockProducts);
   const totalPages = Math.ceil(filteredProducts.length / pageSize);
 
-  // Get current products based on pagination
   const currentProducts = filteredProducts.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
@@ -76,25 +75,25 @@ const ListingScreen = () => {
 
   const renderHeader = () => (
     <>
-      {/* Banner */}
       <View
         style={{
           height: 180,
           borderRadius: 16,
           overflow: "hidden",
           marginBottom: 16,
-          position: "relative"
+          position: "relative",
+          marginTop: Platform.OS === "ios" ? 30 : 0,
         }}
       >
         <Image
           source={{
-            uri: "https://images.unsplash.com/photo-1512374382149-233c42b6a83b?q=80&w=435&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            uri: "https://images.unsplash.com/photo-1512374382149-233c42b6a83b?q=80&w=435&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
           }}
           style={{
             width: "100%",
             height: "100%",
             resizeMode: "cover",
-            position: "absolute"
+            position: "absolute",
           }}
         />
         <View
@@ -102,7 +101,7 @@ const ListingScreen = () => {
             position: "absolute",
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)"
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
           }}
         />
         <View style={{ flex: 1, padding: 16, justifyContent: "center" }}>
@@ -112,7 +111,7 @@ const ListingScreen = () => {
               color: "#fff",
               fontSize: 26,
               fontWeight: "bold",
-              marginVertical: 4
+              marginVertical: 4,
             }}
           >
             Get 30% off
@@ -124,12 +123,11 @@ const ListingScreen = () => {
         </View>
       </View>
 
-      {/* Filter + Sort */}
       <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          marginBottom: 16
+          marginBottom: 16,
         }}
       >
         <TouchableOpacity
@@ -140,7 +138,7 @@ const ListingScreen = () => {
             borderRadius: 8,
             alignItems: "center",
             flex: 1,
-            marginRight: 8
+            marginRight: 8,
           }}
           onPress={() => setFilterVisible(true)}
         >
@@ -155,7 +153,7 @@ const ListingScreen = () => {
             alignItems: "center",
             flex: 1,
             justifyContent: "space-between",
-            marginLeft: 8
+            marginLeft: 8,
           }}
         >
           <Text style={{ fontWeight: "500" }}>Trending</Text>
@@ -163,7 +161,6 @@ const ListingScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Title + count */}
       <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 4 }}>
         Life Style Shoes
       </Text>
@@ -179,7 +176,7 @@ const ListingScreen = () => {
         flexDirection: "row",
         justifyContent: "center",
         marginTop: 16,
-        marginBottom: 40
+        marginBottom: 40,
       }}
     >
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -191,7 +188,7 @@ const ListingScreen = () => {
             paddingHorizontal: 15,
             margin: 5,
             backgroundColor: currentPage === page ? "#333" : "#ccc",
-            borderRadius: 5
+            borderRadius: 5,
           }}
         >
           <Text style={{ color: currentPage === page ? "#fff" : "#000" }}>
@@ -203,35 +200,41 @@ const ListingScreen = () => {
   );
 
   return (
-    <View style={{ flexDirection: "row", flex: 1, paddingTop: 90 }}>
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header />
-      <View style={{ flex: 1, padding: 16 }}>
-        <FlatList
-          data={currentProducts}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          renderItem={({ item }) => (
-            <ProductCard
-              image={{ uri: item.mainImage }}
-              name={item.name || "Name"}
-              price={`$${item.price.regular}`}
-              tag={
-                item.isNew
-                  ? "New"
-                  : item.price.isOnSale
-                    ? `${item.price.discountPercent}% off`
-                    : undefined
-              }
-              onPress={() =>
-                navigation.navigate("ProductDetails", { productId: item.sku })
-              }
-            />
-          )}
-          ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      <FlatList
+        data={currentProducts}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        renderItem={({ item }) => (
+          <ProductCard
+            image={{ uri: item.mainImage }}
+            name={item.name || "Name"}
+            price={`$${item.price.regular}`}
+            tag={
+              item.isNew
+                ? "New"
+                : item.price.isOnSale
+                  ? `${item.price.discountPercent}% off`
+                  : undefined
+            }
+            onPress={() =>
+              navigation.navigate("ProductDetails", {
+                productId: String(item.sku),
+              })
+            }
+          />
+        )}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingTop: 100,
+          paddingHorizontal: 16,
+          paddingBottom: 16,
+          backgroundColor: "#fff",
+        }}
+      />
       <FilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

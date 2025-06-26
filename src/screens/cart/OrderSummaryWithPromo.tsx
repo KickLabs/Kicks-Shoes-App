@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { COLORS } from "../../constants/theme";
 
 interface OrderSummaryWithPromoProps {
@@ -9,7 +15,12 @@ interface OrderSummaryWithPromoProps {
   total: number;
 }
 
-const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({ itemCount, subtotal, delivery, total }) => {
+const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
+  itemCount,
+  subtotal,
+  delivery,
+  total,
+}) => {
   const [showPromoInput, setShowPromoInput] = useState(false);
 
   return (
@@ -27,7 +38,10 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({ itemCount
         <Text style={styles.totalText}>Total</Text>
         <Text style={styles.totalText}>${total.toFixed(2)}</Text>
       </View>
-      <TouchableOpacity onPress={() => setShowPromoInput(!showPromoInput)} style={styles.promoLabel}>
+      <TouchableOpacity
+        onPress={() => setShowPromoInput(!showPromoInput)}
+        style={styles.promoLabel}
+      >
         <Text style={styles.promoText}>User a promo code</Text>
       </TouchableOpacity>
       {showPromoInput && (
@@ -40,6 +54,9 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({ itemCount
 const styles = StyleSheet.create({
   container: {
     marginVertical: 16,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 12,
   },
   title: {
     fontSize: 16,

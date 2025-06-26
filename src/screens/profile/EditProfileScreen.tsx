@@ -23,10 +23,14 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        style={styles.container}
+      >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate("Profile")}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="#333" />

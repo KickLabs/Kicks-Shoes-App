@@ -23,7 +23,11 @@ const FilterSidebar = ({
   onSelect,
 }: FilterSidebarProps) => {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.container}
+    >
       {/* Genders */}
       <Text style={styles.sectionTitle}>Gender</Text>
       <View style={styles.chipContainer}>

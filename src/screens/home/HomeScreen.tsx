@@ -42,22 +42,25 @@ const reviews = [
 ];
 
 const HomeScreen = () => {
-
   type NavigationProp = StackNavigationProp<RootStackParamList>;
   const navigation = useNavigation<NavigationProp>();
   const goToListingScreen = () => {
     navigation.getParent()?.navigate("ListingScreen");
   };
-  
+
   const [bannerIdx, setBannerIdx] = useState(0);
-  
+
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
   const handleCategoryNext = () => {};
 
   return (
-    <ScrollView style={{ flex: 1 }}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      style={{ flex: 1 }}
+    >
       <View style={{ paddingTop: 80 }}>
         {bannerProduct && (
           <Banner
@@ -101,7 +104,7 @@ const HomeScreen = () => {
               paddingVertical: 12,
               marginLeft: 12,
             }}
-             onPress={goToListingScreen}
+            onPress={goToListingScreen}
           >
             <Text
               style={{

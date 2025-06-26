@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -19,6 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Header from "@/components/layout/Header";
+import { Ionicons } from "@expo/vector-icons";
 
 const newProducts = mockProducts.slice(0, 4);
 
@@ -32,11 +33,26 @@ const CheckoutScreen: React.FC = () => {
   const [sameInfo, setSameInfo] = useState(true);
   const [is13Plus, setIs13Plus] = useState(true);
   const [subscribeNews, setSubscribeNews] = useState(true);
+  const [deliveryMethod, setDeliveryMethod] = useState<"standard" | "collect">(
+    "standard"
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={{ paddingTop: 90 }}>
-        <Header />
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      style={styles.container}
+    >
+      <View style={{ paddingTop: 40 }} />
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.black} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Checkout</Text>
+        <View style={{ width: 40 }} />
       </View>
       <CartHeader />
       <OrderItem
@@ -50,8 +66,8 @@ const CheckoutScreen: React.FC = () => {
       <OrderSummary
         itemCount={1}
         subtotal={130.0}
-        delivery={6.99}
-        total={130.0}
+        delivery={deliveryMethod === "standard" ? 6.99 : 0}
+        total={130.0 + (deliveryMethod === "standard" ? 6.99 : 0)}
       />
 
       <View style={styles.section}>
@@ -59,17 +75,18 @@ const CheckoutScreen: React.FC = () => {
         <Text style={styles.description}>
           We will use these details to keep you inform about your delivery.
         </Text>
-        <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          keyboardType="email-address"
+        />
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Shipping Address</Text>
         <TextInput style={styles.input} placeholder="First Name*" />
         <TextInput style={styles.input} placeholder="Last Name*" />
-        <TextInput
-          style={styles.input}
-          placeholder="Find Delivery Address*"
-        />
+        <TextInput style={styles.input} placeholder="Find Delivery Address*" />
         <Text style={styles.hint}>
           Start typing your street address or zip code for suggestion
         </Text>
@@ -85,25 +102,41 @@ const CheckoutScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Shipping Address</Text>
 
         {/* Delivery Methods */}
-        <View style={styles.deliveryBox}>
+        <TouchableOpacity
+          style={[
+            styles.deliveryBox,
+            deliveryMethod === "standard" && styles.selectedBox,
+          ]}
+          onPress={() => setDeliveryMethod("standard")}
+        >
           <View>
             <Text style={styles.deliveryTitle}>Standard Delivery</Text>
             <Text style={styles.deliveryDescription}>
-              Enter your address to get your order  
+              Enter your address to get your order
             </Text>
           </View>
-          <Text style={styles.priceText}>$6.00</Text>
-        </View>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.priceText}>$6.99</Text>
+          </View>
+        </TouchableOpacity>
 
-        <View style={[styles.deliveryBox, styles.selectedBox]}>
+        <TouchableOpacity
+          style={[
+            styles.deliveryBox,
+            deliveryMethod === "collect" && styles.selectedBox,
+          ]}
+          onPress={() => setDeliveryMethod("collect")}
+        >
           <View>
             <Text style={styles.deliveryTitle}>Collect in store</Text>
             <Text style={styles.deliveryDescription}>
               Pay now, collect in store
             </Text>
           </View>
-          <Text style={styles.priceText}>Free</Text>
-        </View>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.priceText}>Free</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Checkboxes */}
         <View style={styles.checkboxContainer}>
@@ -115,7 +148,7 @@ const CheckoutScreen: React.FC = () => {
 
         <View style={styles.checkboxContainer}>
           <CustomCheckbox value={is13Plus} onChange={setIs13Plus} />
-          <Text style={styles.checkboxLabel}>I’m 13+ year old</Text>
+          <Text style={styles.checkboxLabel}>I'm 13+ year old</Text>
         </View>
 
         <Text style={[styles.sectionTitle, { fontSize: 14 }]}>
@@ -124,7 +157,7 @@ const CheckoutScreen: React.FC = () => {
         <View style={styles.checkboxContainer}>
           <CustomCheckbox value={subscribeNews} onChange={setSubscribeNews} />
           <Text style={styles.checkboxLabel}>
-            Yes, I’d like to receive emails about exclusive sales and more.
+            Yes, I'd like to receive emails about exclusive sales and more.
           </Text>
         </View>
       </View>
@@ -134,7 +167,6 @@ const CheckoutScreen: React.FC = () => {
         <Text style={styles.payButtonText}>REVIEW AND PAY</Text>
         <Text style={styles.arrow}>→</Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 };
@@ -143,6 +175,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: "center",
+    textTransform: "uppercase",
+    fontSize: 24,
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  backButton: {
+    position: "relative",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   section: {
     paddingHorizontal: 16,
@@ -171,7 +232,7 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 12,
   },
-    deliveryBox: {
+  deliveryBox: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
@@ -183,6 +244,7 @@ const styles = StyleSheet.create({
   },
   selectedBox: {
     borderColor: COLORS.black,
+    backgroundColor: "#e8f0fe",
   },
   deliveryTitle: {
     fontSize: 16,
@@ -229,7 +291,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 10,
   },
-
 });
 
 export default CheckoutScreen;

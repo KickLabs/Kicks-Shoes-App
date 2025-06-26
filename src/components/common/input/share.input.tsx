@@ -6,28 +6,28 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
 } from "react-native";
 
 const styles = StyleSheet.create({
   inputGroup: {
     padding: 5,
-    gap: 10
+    gap: 10,
   },
   text: {
-    fontSize: 18
+    fontSize: 18,
   },
   input: {
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10
+    borderRadius: 10,
   },
   eye: {
     position: "absolute",
     right: 10,
-    top: 10
-  }
+    top: 10,
+  },
 });
 
 interface IProps {
@@ -52,7 +52,7 @@ const ShareInput = (props: IProps) => {
     setValue,
     onChangeText,
     onBlur,
-    error
+    error,
   } = props;
   return (
     <View style={styles.inputGroup}>
@@ -61,7 +61,7 @@ const ShareInput = (props: IProps) => {
         <TextInput
           style={[
             styles.input,
-            { borderColor: isFocus ? APP_COLOR.ORANGE : APP_COLOR.GREY }
+            { borderColor: isFocus ? APP_COLOR.BLUE : APP_COLOR.GREY },
           ]}
           onFocus={() => setIsFocus(true)}
           onBlur={(e) => {

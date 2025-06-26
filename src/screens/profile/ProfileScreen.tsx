@@ -10,7 +10,15 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 // (Các component ProfileQuickIcon và ProfileMenuItem không thay đổi)
-const ProfileQuickIcon = ({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) => (
+const ProfileQuickIcon = ({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: string;
+  label: string;
+  onPress: () => void;
+}) => (
   <TouchableOpacity style={styles.profileIconContainer} onPress={onPress}>
     <Ionicons name={icon as any} size={28} color="#222" />
     <Text style={styles.profileIconLabel}>{label}</Text>
@@ -41,7 +49,11 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        style={styles.container}
+      >
         {/* === PART 1: HEADER === */}
         <View style={styles.headerContainer}>
           <View style={styles.avatarCircle}>
@@ -61,20 +73,20 @@ const ProfileScreen = ({ navigation }: { navigation: any }) => {
         {/* === PART 2: QUICK ACCESS ICON ROW (ĐÃ THAY ĐỔI) === */}
         {/* ====================================================== */}
         <View style={styles.iconRow}>
-          <ProfileQuickIcon 
-            icon="bag-outline" 
-            label="Orders" 
+          <ProfileQuickIcon
+            icon="bag-outline"
+            label="Orders"
             onPress={() => navigation.navigate("OrderHistory")}
           />
-          <ProfileQuickIcon 
-            icon="chatbubble-outline" 
-            label="Chat" 
-            onPress={() => navigation.navigate("Chat")} 
+          <ProfileQuickIcon
+            icon="chatbubble-outline"
+            label="Chat"
+            onPress={() => navigation.navigate("Chat")}
           />
-          <ProfileQuickIcon 
-            icon="settings-outline" 
-            label="Settings" 
-            onPress={() => console.log("Navigate to Settings")} 
+          <ProfileQuickIcon
+            icon="settings-outline"
+            label="Settings"
+            onPress={() => console.log("Navigate to Settings")}
           />
         </View>
         {/* ====================================================== */}

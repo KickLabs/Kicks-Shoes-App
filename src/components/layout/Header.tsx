@@ -24,7 +24,10 @@ const Header = () => {
               style={styles.logo}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity
+            style={styles.searchIcon}
+            onPress={() => navigation.navigate("SearchScreen")}
+          >
             <Ionicons name="search" size={28} color="#232321" />
           </TouchableOpacity>
         </View>
