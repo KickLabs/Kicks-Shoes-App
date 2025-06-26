@@ -15,6 +15,8 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Markdown from "react-native-markdown-display";
+import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 
 const genAI = new GoogleGenerativeAI(process.env.EXPO_PUBLIC_GEMINI_API_KEY);
 
@@ -30,7 +32,7 @@ const ChatScreen = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const flatListRef = useRef<FlatList<Message>>(null);
-
+  const navigation = useNavigation();
   const generateAIResponse = async (userMessage: string) => {
     try {
       setIsLoading(true);
@@ -85,8 +87,7 @@ const ChatScreen = () => {
       style={[
         styles.messageItem,
         item.sender === "user" ? styles.userMessage : styles.aiMessage,
-      ]}
-    >
+      ]}>
       <Image
         source={{
           uri: "https://ui-avatars.com/api/?name=AI&background=random",
@@ -110,8 +111,16 @@ const ChatScreen = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
+      style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Chat Screen</Text>
+        <View style={styles.backButton} />
+      </View>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -145,7 +154,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 90,
+    paddingTop: 20,
   },
   messageList: {
     padding: 10,
@@ -194,6 +203,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     borderRadius: 20,
     marginRight: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    fontFamily: "Rubik-Medium",
   },
 });
 

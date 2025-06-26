@@ -61,8 +61,8 @@ const CartStackScreen = () => (
 );
 
 const ChatStackScreen = () => (
-  <ChatStack.Navigator screenOptions={{ header: () => <Header /> }}>
-    <CartStack.Screen name="Chat" component={ChatScreen} />
+  <ChatStack.Navigator screenOptions={{ headerShown: false }}>
+    <ChatStack.Screen name="Chat" component={ChatScreen} />
   </ChatStack.Navigator>
 );
 
@@ -87,8 +87,7 @@ const OrderStackScreen = () => (
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
-    screenOptions={{ headerShown: false }}
-  >
+    screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeStackScreen} />
     <Tab.Screen name="ListingScreen" component={ListingScreen} />
     <Tab.Screen name="Cart" component={CartStackScreen} />

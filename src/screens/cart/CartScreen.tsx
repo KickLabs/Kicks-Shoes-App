@@ -47,15 +47,7 @@ const CartScreen: React.FC = () => {
       </View>
       <Text style={styles.title}>You may also like</Text>
 
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          padding: 16,
-        }}
-      >
+      <View style={styles.productWrapper}>
         {newProducts.map((p) => (
           <ProductCard
             key={p.sku}
@@ -85,12 +77,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 24,
     fontFamily: "Rubik-SemiBold",
     color: COLORS.black,
     marginLeft: 16,
+  },
+  productWrapper: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
 });
 
