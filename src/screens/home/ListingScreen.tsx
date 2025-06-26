@@ -6,13 +6,21 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
+<<<<<<< HEAD
   Image,
   Platform,
+=======
+  Image
+>>>>>>> a88f5f4386fbc415ad4433e8e3f7ca8d50c9197c
 } from "react-native";
 import { products as mockProducts, getProducts } from "../../mockData";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "@/components/layout/Header";
+<<<<<<< HEAD
 import Footer from "@/components/layout/Footer";
+=======
+import FilterModal from "@/components/common/FilterModal";
+>>>>>>> a88f5f4386fbc415ad4433e8e3f7ca8d50c9197c
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -22,13 +30,53 @@ const screenWidth = Dimensions.get("window").width;
 const ListingScreen = () => {
   const pageSize = 6;
   const [currentPage, setCurrentPage] = useState(1);
-
+  const [filterVisible, setFilterVisible] = useState(false);
   const totalProducts = mockProducts.length;
-  const currentProducts = getProducts(currentPage, pageSize);
 
-  const totalPages = Math.ceil(totalProducts / pageSize);
+  const [filters, setFilters] = useState({
+    sizes: [],
+    colors: [],
+    categories: [],
+    brands: [],
+    price: 500
+  });
 
-  const handlePageChange = (page: number) => {
+  const filterProducts = (products) => {
+    return products.filter((product) => {
+      const matchesInventory = product.inventory.some((inventoryItem) => {
+        const matchesSize =
+          filters.sizes.length === 0 ||
+          filters.sizes.includes(inventoryItem.size);
+        const matchesColor =
+          filters.colors.length === 0 ||
+          filters.colors.includes(inventoryItem.color.toLowerCase()); // Normalize case
+        return matchesSize && matchesColor && inventoryItem.isAvailable;
+      });
+
+      const matchesCategory =
+        filters.categories.length === 0 ||
+        filters.categories.includes(product.category);
+      const matchesBrand =
+        filters.brands.length === 0 ||
+        (product.brand && filters.brands.includes(product.brand));
+      const matchesPrice = product.price.regular <= filters.price;
+
+      return (
+        matchesInventory && matchesCategory && matchesBrand && matchesPrice
+      );
+    });
+  };
+
+  const filteredProducts = filterProducts(mockProducts);
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
+
+  // Get current products based on pagination
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
@@ -44,19 +92,23 @@ const ListingScreen = () => {
           borderRadius: 16,
           overflow: "hidden",
           marginBottom: 16,
+<<<<<<< HEAD
           position: "relative",
           marginTop: Platform.OS === "ios" ? 30 : 0,
+=======
+          position: "relative"
+>>>>>>> a88f5f4386fbc415ad4433e8e3f7ca8d50c9197c
         }}
       >
         <Image
           source={{
-            uri: "https://images.unsplash.com/photo-1512374382149-233c42b6a83b?q=80&w=435&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            uri: "https://images.unsplash.com/photo-1512374382149-233c42b6a83b?q=80&w=435&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           }}
           style={{
             width: "100%",
             height: "100%",
             resizeMode: "cover",
-            position: "absolute",
+            position: "absolute"
           }}
         />
         <View
@@ -64,7 +116,7 @@ const ListingScreen = () => {
             position: "absolute",
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: "rgba(0, 0, 0, 0.5)"
           }}
         />
         <View style={{ flex: 1, padding: 16, justifyContent: "center" }}>
@@ -74,7 +126,7 @@ const ListingScreen = () => {
               color: "#fff",
               fontSize: 26,
               fontWeight: "bold",
-              marginVertical: 4,
+              marginVertical: 4
             }}
           >
             Get 30% off
@@ -91,7 +143,7 @@ const ListingScreen = () => {
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          marginBottom: 16,
+          marginBottom: 16
         }}
       >
         <TouchableOpacity
@@ -102,12 +154,12 @@ const ListingScreen = () => {
             borderRadius: 8,
             alignItems: "center",
             flex: 1,
-            marginRight: 8,
+            marginRight: 8
           }}
+          onPress={() => setFilterVisible(true)}
         >
           <Text style={{ fontWeight: "500" }}>Filters</Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           style={{
             flexDirection: "row",
@@ -117,7 +169,7 @@ const ListingScreen = () => {
             alignItems: "center",
             flex: 1,
             justifyContent: "space-between",
-            marginLeft: 8,
+            marginLeft: 8
           }}
         >
           <Text style={{ fontWeight: "500" }}>Trending</Text>
@@ -130,7 +182,7 @@ const ListingScreen = () => {
         Life Style Shoes
       </Text>
       <Text style={{ marginBottom: 16, color: "#555" }}>
-        {totalProducts} items
+        {filteredProducts.length} items
       </Text>
     </>
   );
@@ -141,7 +193,7 @@ const ListingScreen = () => {
         flexDirection: "row",
         justifyContent: "center",
         marginTop: 16,
-        marginBottom: 40,
+        marginBottom: 40
       }}
     >
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -153,7 +205,7 @@ const ListingScreen = () => {
             paddingHorizontal: 15,
             margin: 5,
             backgroundColor: currentPage === page ? "#333" : "#ccc",
-            borderRadius: 5,
+            borderRadius: 5
           }}
         >
           <Text style={{ color: currentPage === page ? "#fff" : "#000" }}>
@@ -167,6 +219,7 @@ const ListingScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <Header />
+<<<<<<< HEAD
       <FlatList
         data={currentProducts}
         numColumns={2}
@@ -198,6 +251,41 @@ const ListingScreen = () => {
           paddingHorizontal: 16,
           paddingBottom: 16,
           backgroundColor: "#fff",
+=======
+      <View style={{ flex: 1, padding: 16 }}>
+        <FlatList
+          data={currentProducts}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          renderItem={({ item }) => (
+            <ProductCard
+              image={{ uri: item.mainImage }}
+              name={item.name || "Name"}
+              price={`$${item.price.regular}`}
+              tag={
+                item.isNew
+                  ? "New"
+                  : item.price.isOnSale
+                    ? `${item.price.discountPercent}% off`
+                    : undefined
+              }
+              onPress={() =>
+                navigation.navigate("ProductDetails", { productId: item.sku })
+              }
+            />
+          )}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={renderFooter}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={(selectedFilters) => {
+          setFilters(selectedFilters);
+          setFilterVisible(false);
+>>>>>>> a88f5f4386fbc415ad4433e8e3f7ca8d50c9197c
         }}
       />
     </View>
