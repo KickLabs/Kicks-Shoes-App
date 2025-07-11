@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,19 +7,86 @@ import {
   ScrollView,
   SafeAreaView,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomButton from "@/components/common/button/custom.button";
+import userService from "@/services/user";
 
 const EditProfileScreen = ({ navigation }: { navigation: any }) => {
-  const [name, setName] = useState("Tran Phuc Tien");
-  const [email, setEmail] = useState("tranphuctien@email.com");
-  const [phone, setPhone] = useState("090-123-4567");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
-  const handleSaveChanges = () => {
-    console.log("Saved:", { name, email, phone });
-    navigation.goBack();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [aboutMe, setAboutMe] = useState("");
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await userService.getProfile();
+      console.log("Profile data in edit screen:", data);
+      setProfile(data);
+
+      // Set form values
+      setFullName((data as any)?.fullName || "");
+      setEmail((data as any)?.email || "");
+      setPhone((data as any)?.phone || "");
+      setAddress((data as any)?.address || "");
+      setAboutMe((data as any)?.aboutMe || "");
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      Alert.alert("Error", "Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSaveChanges = async () => {
+    try {
+      setSaving(true);
+
+      const updateData = {
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        aboutMe: aboutMe.trim(),
+      };
+
+      console.log("Updating profile with:", updateData);
+
+      await userService.updateProfile(updateData);
+
+      Alert.alert("Success", "Profile updated successfully!", [
+        { text: "OK", onPress: () => navigation.goBack() },
+      ]);
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", error.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#222" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,8 +118,8 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
           <Text style={styles.label}>Full Name</Text>
           <TextInput
             style={styles.input}
-            value={name}
-            onChangeText={setName}
+            value={fullName}
+            onChangeText={setFullName}
             placeholder="Enter your full name"
           />
 
@@ -73,14 +140,40 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
             keyboardType="phone-pad"
             placeholder="Enter your phone number"
           />
+
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={styles.input}
+            value={address}
+            onChangeText={setAddress}
+            placeholder="Enter your address"
+            multiline={true}
+            numberOfLines={2}
+          />
+
+          <Text style={styles.label}>About Me</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={aboutMe}
+            onChangeText={setAboutMe}
+            placeholder="Tell us about yourself"
+            multiline={true}
+            numberOfLines={3}
+          />
         </View>
 
         <CustomButton
-          title="Save Changes"
+          title={saving ? "Saving..." : "Save Changes"}
           onPress={handleSaveChanges}
           style={styles.saveButton}
           textStyle={styles.saveButtonText}
         />
+        {saving && (
+          <View style={styles.savingContainer}>
+            <ActivityIndicator size="small" color="#222" />
+            <Text style={styles.savingText}>Updating profile...</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -172,6 +265,32 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  savingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+  },
+  savingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: "#666",
   },
 });
 

@@ -1,23 +1,15 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import {
-  API_URL,
-  API_HEADERS,
-  API_TIMEOUT,
-  API_ERROR_MESSAGES,
-} from "../constants/api";
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { API_HEADERS, API_TIMEOUT, API_ERROR_MESSAGES } from "../constants/api";
 import { ApiResponse } from "../types";
+import axiosInstance from "./axios.customize";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 class ApiService {
   private static instance: ApiService;
   private api: AxiosInstance;
 
   private constructor() {
-    this.api = axios.create({
-      baseURL: API_URL,
-      headers: API_HEADERS,
-      timeout: API_TIMEOUT,
-    });
-
+    this.api = axiosInstance;
     this.setupInterceptors();
   }
 
@@ -31,11 +23,25 @@ class ApiService {
   private setupInterceptors(): void {
     // Request interceptor
     this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem("token");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+      async (config) => {
+        let token = await AsyncStorage.getItem("accessToken");
+        if (
+          token &&
+          typeof token === "string" &&
+          token !== "null" &&
+          token !== "undefined"
+        ) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = String("Bearer " + token);
         }
+        console.log(
+          "TOKEN GỬI:",
+          token,
+          "| HEADER:",
+          config.headers.Authorization,
+          "| TYPE:",
+          typeof config.headers.Authorization
+        );
         return config;
       },
       (error) => {
@@ -43,7 +49,7 @@ class ApiService {
       }
     );
 
-    // Response interceptor
+    // Response interceptor giữ nguyên
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {

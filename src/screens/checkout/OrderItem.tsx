@@ -1,33 +1,54 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { COLORS, SIZES } from "../../constants/theme";
 import { AntDesign, Feather } from "@expo/vector-icons"; // dùng icon đẹp
+import { formatVND } from "@/utils/currency";
 
-interface OrderItem {
+interface OrderItemProps {
+  id: string;
   name: string;
   description: string;
   color: string;
   size: string;
   quantity: number;
   price: number;
+  image?: string;
+  onIncrease?: () => void;
+  onDecrease?: () => void;
+  onRemove?: () => void;
+  loading?: boolean;
 }
 
-const OrderItem: React.FC<OrderItem> = ({
+const OrderItem: React.FC<OrderItemProps> = ({
+  id,
   name,
   description,
   color,
   size,
   quantity,
   price,
+  image,
+  onIncrease,
+  onDecrease,
+  onRemove,
+  loading,
 }) => {
   return (
     <View style={styles.card}>
       <Text style={styles.title}>Order Detail</Text>
-
       <View style={styles.container}>
         <Image
           source={{
-            uri: "https://sneakernews.com/wp-content/uploads/2020/12/adidas-Ultra-Boost-1.0-DNA-H68156-8.jpg?w=1140",
+            uri:
+              image ||
+              "https://sneakernews.com/wp-content/uploads/2020/12/adidas-Ultra-Boost-1.0-DNA-H68156-8.jpg?w=1140",
           }}
           style={styles.image}
         />
@@ -37,16 +58,37 @@ const OrderItem: React.FC<OrderItem> = ({
           <Text style={styles.color}>{color}</Text>
           <View style={styles.row}>
             <Text style={styles.meta}>Size {size}</Text>
-            <Text style={styles.meta}>Quantity {quantity}</Text>
+            <View style={styles.qtyRow}>
+              <TouchableOpacity
+                onPress={onDecrease}
+                disabled={loading || quantity <= 1}
+                style={styles.qtyBtn}
+              >
+                <AntDesign name="minuscircleo" size={18} color={COLORS.gray} />
+              </TouchableOpacity>
+              <Text style={styles.meta}>{quantity}</Text>
+              <TouchableOpacity
+                onPress={onIncrease}
+                disabled={loading}
+                style={styles.qtyBtn}
+              >
+                <AntDesign name="pluscircleo" size={18} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.price}>${price.toFixed(2)}</Text>
+          <Text style={styles.price}>{formatVND(price)}</Text>
         </View>
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.icon}>
-            <AntDesign name="hearto" size={20} color={COLORS.gray} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.icon}>
-            <Feather name="trash-2" size={20} color={COLORS.gray} />
+          <TouchableOpacity
+            style={styles.icon}
+            onPress={onRemove}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size={18} color={COLORS.gray} />
+            ) : (
+              <Feather name="trash-2" size={20} color={COLORS.gray} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -106,10 +148,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     marginBottom: 6,
+    alignItems: "center",
+  },
+  qtyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+    gap: 4,
+  },
+  qtyBtn: {
+    padding: 2,
   },
   meta: {
     fontSize: 13,
     color: COLORS.gray,
+    marginHorizontal: 2,
   },
   price: {
     fontSize: 18,

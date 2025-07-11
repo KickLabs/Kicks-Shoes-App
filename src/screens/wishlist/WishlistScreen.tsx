@@ -7,14 +7,21 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { RootState } from "../../store";
-import { clearWishlist, addToWishlist } from "../../store/slices/wishlistSlice";
+import {
+  clearWishlist,
+  addToWishlist,
+  removeFromWishlist,
+} from "../../store/slices/wishlistSlice";
 import { getWishlistItems } from "../../mockWishlistData";
-import WishlistItem from "../../components/wishlist/WishlistItem";
+import WishlistProductCard from "../../components/wishlist/WishlistProductCard";
+import { addToCart } from "../../store/slices/cartSlice";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 const WishlistScreen = () => {
   const navigation = useNavigation();
@@ -95,28 +102,53 @@ const WishlistScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {items.length > 0 ? (
-        <>
-          {renderHeader()}
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <WishlistItem
-                item={item}
-                onPress={() => handleProductPress(item.id)}
-              />
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-            bounces={true}
-          />
-        </>
-      ) : (
-        <EmptyWishlist />
-      )}
-    </SafeAreaView>
+    <AuthGuard>
+      <SafeAreaView style={styles.container}>
+        {items.length > 0 ? (
+          <>
+            {renderHeader()}
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              renderItem={({ item }) => (
+                <WishlistProductCard
+                  image={item.mainImage}
+                  name={item.name}
+                  price={
+                    item.price.isOnSale
+                      ? item.price.regular *
+                        (1 - item.price.discountPercent / 100)
+                      : item.price.regular
+                  }
+                  isNew={item.isNew}
+                  isOnSale={item.price.isOnSale}
+                  discountPercent={item.price.discountPercent}
+                  onPress={() => handleProductPress(item.id)}
+                  onRemove={() => dispatch(removeFromWishlist(item.id))}
+                  onAddToCart={() =>
+                    dispatch(
+                      addToCart({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price.regular,
+                        quantity: 1,
+                        image: item.mainImage,
+                      })
+                    )
+                  }
+                />
+              )}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listContainer}
+              bounces={true}
+            />
+          </>
+        ) : (
+          <EmptyWishlist />
+        )}
+      </SafeAreaView>
+    </AuthGuard>
   );
 };
 
@@ -124,6 +156,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
+    marginTop: Platform.OS === "ios" ? 120 : 0,
   },
   header: {
     flexDirection: "row",
@@ -174,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 40,
-    paddingBottom: 120, // Extra padding to prevent overlap with tab bar
+    paddingBottom: 120,
   },
   emptyIconContainer: {
     width: 140,

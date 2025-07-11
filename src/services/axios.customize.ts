@@ -1,42 +1,46 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Platform } from "react-native";
 
-const backend =
-  Platform.OS === "android"
-    ? process.env.EXPO_PUBLIC_ANDROID_API_URL
-    : process.env.EXPO_PUBLIC_IOS_API_URL;
+const backend = "http://192.168.1.19:3000/api";
+
+console.log("[API] Backend URL:", backend);
 
 const instance = axios.create({
-  baseURL: backend
+  baseURL: backend,
+  timeout: 60000, // 60 seconds for mobile networks
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
 });
 
-// Add a request interceptor
-instance.interceptors.request.use(
-  async function (config) {
-    // Do something before request is sent
-    const access_token = await AsyncStorage.getItem("access_token");
-    config.headers["Authorization"] = `Bearer ${access_token}`;
-    return config;
-  },
-  function (error) {
-    // Do something with request error
-    return Promise.reject(error);
-  }
-);
+// Request interceptor is handled in api.ts - avoid duplicate interceptors
 
 // Add a response interceptor
 instance.interceptors.response.use(
   function (response) {
-    // Any status code that lie within the range of 2xx cause this function to trigger
-    // Do something with response data
+    console.log("API Response:", response.status, response.config.url);
     if (response.data) return response.data;
     return response;
   },
   function (error) {
+    console.log("API Error:", error.message);
+    console.log("Error Config:", error.config?.url);
+    console.log(
+      "Error Response:",
+      error.response?.status,
+      error.response?.data
+    );
+    if (
+      error.code === "NETWORK_ERROR" ||
+      error.message.includes("Network Error")
+    ) {
+      console.log("Network error detected - check connection");
+      return Promise.reject(
+        new Error("Network error. Please check your internet connection.")
+      );
+    }
     if (error?.response?.data) return error?.response?.data;
-    // Any status codes that falls outside the range of 2xx cause this function to trigger
-    // Do something with response error
     return Promise.reject(error);
   }
 );

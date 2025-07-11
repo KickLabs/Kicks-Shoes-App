@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,52 +14,112 @@ import { COLORS, SIZES } from "../../constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import Header from "../../components/layout/Header";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
-import { products as mockProducts } from "../../mockData";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
 import ProductCard from "../../components/common/ProductCard";
+import api from "../../services/api";
+import { API_ENDPOINTS } from "../../constants/api";
+import { formatVND } from "../../utils/currency";
 
 const ProductDetailsScreen = () => {
   const route =
     useRoute<RouteProp<{ params: { productId: string } }, "params">>();
   const productId = route.params?.productId;
-  const product =
-    mockProducts.find((p) => p.sku === productId) || mockProducts[0];
-  const recommendations = mockProducts
-    .filter((p) => p.sku !== product.sku && p.inventory?.[0]?.images?.[0])
-    .slice(0, 4);
-  const [selectedImage, setSelectedImage] = useState(
-    product.inventory?.[0]?.images?.[0] || ""
-  );
-  const [selectedColor, setSelectedColor] = useState(
-    product.variants?.colors?.[0] || ""
-  );
-  const [selectedSize, setSelectedSize] = useState(
-    product.variants?.sizes?.[0] || ""
-  );
-  const [favourite, setFavourite] = useState(false);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  const [product, setProduct] = useState<any>(null);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+  const [favourite, setFavourite] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(
+          `${API_ENDPOINTS.PRODUCT_DETAILS(productId)}`
+        );
+        const prod = res.data.data || res.data;
+        setProduct(prod);
+        setSelectedColor(
+          prod.variants?.colors?.[0] || prod.inventory?.[0]?.color || ""
+        );
+        setSelectedSize(
+          prod.variants?.sizes?.[0] || prod.inventory?.[0]?.size || ""
+        );
+        setSelectedImage(prod.inventory?.[0]?.images?.[0] || "");
+      } catch (err: any) {
+        setError(err.message || "Lỗi tải sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [productId]);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const res = await api.get(API_ENDPOINTS.PRODUCTS);
+        const all = res.data.data?.products || res.data.products || [];
+        setRecommendations(
+          all
+            .filter(
+              (p: any) => p.id !== productId && p.inventory?.[0]?.images?.[0]
+            )
+            .slice(0, 4)
+        );
+      } catch {}
+    };
+    fetchRecommendations();
+  }, [productId]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+  if (error || !product) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: "red" }}>
+          {error || "Không tìm thấy sản phẩm"}
+        </Text>
+      </View>
+    );
+  }
+
   const images =
-    product.inventory.find((item) => item.color === selectedColor)?.images ||
+    product.inventory.find((item: any) => item.color === selectedColor)
+      ?.images ||
+    product.inventory?.[0]?.images ||
     [];
 
   const unavailableSizes = product.inventory
-    .filter((item) => !item.isAvailable || item.quantity === 0)
-    .map((item) => item.size.toString());
+    .filter((item: any) => !item.isAvailable || item.quantity === 0)
+    .map((item: any) => item.size.toString());
 
   const getPrice = () => {
     return {
-      regular: product.price.regular,
-      discounted: product.price.isOnSale
-        ? product.price.regular * (1 - product.price.discountPercent / 100)
-        : null,
+      regular: product.price?.regular,
+      discounted:
+        product.discountedPrice ||
+        (product.price?.isOnSale
+          ? product.price.regular * (1 - product.price.discountPercent / 100)
+          : null),
     };
   };
 
   const handleAddToCart = () => {
     const selectedVariant = product.inventory.find(
-      (item) => item.size === selectedSize && item.color === selectedColor
+      (item: any) => item.size === selectedSize && item.color === selectedColor
     );
 
     if (
@@ -70,7 +130,6 @@ const ProductDetailsScreen = () => {
       Alert.alert("Error", "Selected variant is not available");
       return;
     }
-
     // TODO: Thêm vào giỏ hàng
   };
 
@@ -116,7 +175,7 @@ const ProductDetailsScreen = () => {
               />
             </View>
             <View style={styles.sliderDots}>
-              {images.map((_, idx) => (
+              {images.map((_: any, idx: number) => (
                 <View
                   key={idx}
                   style={[styles.dot, imageIndex === idx && styles.activeDot]}
@@ -125,7 +184,7 @@ const ProductDetailsScreen = () => {
             </View>
           </View>
           <View style={styles.thumbnailContainerNew}>
-            {images.map((img, idx) => (
+            {images.map((img: string, idx: number) => (
               <TouchableOpacity
                 key={idx}
                 style={[
@@ -152,12 +211,16 @@ const ProductDetailsScreen = () => {
             <Text style={styles.productName}>
               {(product.name || "").toUpperCase()}
             </Text>
-            <Text style={styles.productPrice}>${getPrice().regular}</Text>
+            <Text style={styles.productPrice}>
+              {getPrice().discounted
+                ? formatVND(getPrice().discounted)
+                : formatVND(getPrice().regular)}
+            </Text>
             <View style={styles.rowBetween}>
               <Text style={styles.sectionTitleNew}>Color</Text>
             </View>
             <View style={styles.colorContainerNew}>
-              {product.variants.colors.map((color) => (
+              {product.variants.colors.map((color: string) => (
                 <TouchableOpacity
                   key={color}
                   style={[
@@ -168,7 +231,7 @@ const ProductDetailsScreen = () => {
                   onPress={() => {
                     setSelectedColor(color);
                     const newVariant = product.inventory.find(
-                      (item) => item.color === color
+                      (item: any) => item.color === color
                     );
                     if (newVariant) {
                       setSelectedImage(newVariant.images[0]);
@@ -185,7 +248,7 @@ const ProductDetailsScreen = () => {
               </TouchableOpacity>
             </View>
             <View style={styles.sizeContainerNew}>
-              {product.variants.sizes.map((size) => (
+              {product.variants.sizes.map((size: string) => (
                 <TouchableOpacity
                   key={size}
                   style={[
@@ -244,13 +307,22 @@ const ProductDetailsScreen = () => {
             <View style={styles.recommendationsGrid}>
               {recommendations.map((item) => (
                 <ProductCard
-                  key={item.sku}
+                  key={item.id}
                   image={{ uri: item.inventory[0]?.images[0] || "" }}
                   name={item.name || ""}
-                  price={item.price.regular.toString()}
+                  price={formatVND(
+                    item.discountedPrice || item.price?.regular || item.price
+                  )}
+                  tag={
+                    item.isNew
+                      ? "New"
+                      : item.discountedPrice
+                        ? "Sale"
+                        : undefined
+                  }
                   onPress={() =>
-                    navigation.replace("ProductDetails", {
-                      productId: item.sku!,
+                    navigation.navigate("ProductDetails", {
+                      productId: item.id,
                     })
                   }
                 />
@@ -356,7 +428,7 @@ const styles = StyleSheet.create({
   },
   sectionTitleNew: {
     fontFamily: "Rubik-Medium",
-    fontSize: 16,
+    fontSize: 24,
     color: COLORS.black,
     marginBottom: 8,
   },

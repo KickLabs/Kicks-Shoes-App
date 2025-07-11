@@ -1,4 +1,4 @@
-export const API_URL = "https://api.kicks-shoes.com";
+export const API_URL = "http://192.168.1.19:3000/api";
 
 export const API_ENDPOINTS = {
   // Auth
@@ -8,9 +8,9 @@ export const API_ENDPOINTS = {
   REFRESH_TOKEN: "/auth/refresh-token",
 
   // User
-  USER_PROFILE: "/users/profile",
-  UPDATE_PROFILE: "/users/profile",
-  CHANGE_PASSWORD: "/users/change-password",
+  USER_PROFILE: "/auth/me",
+  UPDATE_PROFILE: "/auth/update-profile",
+  CHANGE_PASSWORD: "/auth/change-password",
 
   // Products
   PRODUCTS: "/products",
@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
 
   // Orders
   ORDERS: "/orders",
+  MY_ORDERS: "/orders/my-orders",
   ORDER_DETAILS: (id: string) => `/orders/${id}`,
 
   // Address

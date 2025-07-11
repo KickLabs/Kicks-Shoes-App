@@ -14,14 +14,28 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
-  images: string[];
+  price: number | {
+    regular: number;
+    discountPercent: number;
+    isOnSale: boolean;
+  };
+  images?: string[];
+  mainImage?: string;
   category: string;
-  sizes: string[];
-  colors: string[];
+  sizes?: string[];
+  colors?: string[];
   stock: number;
-  rating: number;
-  reviews: Review[];
+  rating?: number;
+  reviews?: Review[];
+  brand: string; // Thêm trường brand
+  inventory?: {
+    images?: string[];
+    size?: string | number;
+    color?: string;
+    quantity?: number;
+    isAvailable?: boolean;
+    [key: string]: any;
+  }[];
 }
 
 export interface Review {

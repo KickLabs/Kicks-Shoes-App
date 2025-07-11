@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import * as mockData from "../../mockData";
+import orderService from "@/services/order";
 
 interface OrderItem {
   productId: number;
@@ -100,6 +101,9 @@ type Styles = {
   reviewButtonText: TextStyle;
   emptyContainer: ViewStyle;
   emptyText: TextStyle;
+  actionButtonContainer: ViewStyle;
+  detailsButton: ViewStyle;
+  detailsButtonText: TextStyle;
 };
 
 const getStatusStyle = (status: string): TextStyle => {
@@ -136,6 +140,8 @@ const getStatusStyle = (status: string): TextStyle => {
 const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
   const [selectedStatus, setSelectedStatus] = useState("delivered");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const statuses = [
     "pending",
@@ -146,15 +152,142 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
   ];
 
   useEffect(() => {
-    // Get orders from mock data
-    const allOrders = mockData.orders;
-    setOrders(allOrders);
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await orderService.getOrders();
+        console.log("Orders data received:", data);
+
+        // Handle different response structures
+        let ordersArray = [];
+        if (Array.isArray(data)) {
+          ordersArray = data;
+        } else if (data && (data as any).orders) {
+          ordersArray = (data as any).orders;
+        } else if (data && (data as any).data) {
+          const dataObj = (data as any).data;
+          ordersArray = Array.isArray(dataObj) ? dataObj : dataObj.orders || [];
+        }
+
+        console.log("Processed orders array:", ordersArray);
+        console.log("First order sample:", ordersArray[0]);
+        if (ordersArray[0]?.items?.[0]) {
+          console.log("First item sample:", ordersArray[0].items[0]);
+          console.log(
+            "Product in first item:",
+            ordersArray[0].items[0].product
+          );
+        }
+        setOrders(ordersArray);
+      } catch (err: any) {
+        console.error("Error fetching orders:", err);
+        setError("Failed to load orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
   }, []);
 
   // Filter orders based on selected status
   const filteredOrders = orders.filter(
     (order) => order.status === selectedStatus
   );
+
+  // Đặt sau khai báo styles
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Order History</Text>
+            <View style={styles.backButton} />
+          </View>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="time-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>Loading orders...</Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Order History</Text>
+            <View style={styles.backButton} />
+          </View>
+          <View style={styles.emptyContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#ff6b6b" />
+            <Text
+              style={[styles.emptyText, { color: "#ff6b6b", marginBottom: 10 }]}
+            >
+              {error}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setError(null);
+                setLoading(true);
+                // Re-fetch orders
+                const fetchOrders = async () => {
+                  try {
+                    const data = await orderService.getOrders();
+                    console.log("Orders data received:", data);
+
+                    let ordersArray = [];
+                    if (Array.isArray(data)) {
+                      ordersArray = data;
+                    } else if (data && (data as any).orders) {
+                      ordersArray = (data as any).orders;
+                    } else if (data && (data as any).data) {
+                      const dataObj = (data as any).data;
+                      ordersArray = Array.isArray(dataObj)
+                        ? dataObj
+                        : dataObj.orders || [];
+                    }
+
+                    setOrders(ordersArray);
+                  } catch (err: any) {
+                    console.error("Error fetching orders:", err);
+                    setError("Failed to load orders");
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchOrders();
+              }}
+              style={{
+                backgroundColor: "#007AFF",
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                borderRadius: 8,
+              }}
+            >
+              <Text style={{ color: "white", fontWeight: "600" }}>
+                Try Again
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const formatPrice = (price: number) => {
     return `đ${price.toLocaleString()}`;
@@ -173,25 +306,56 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  const handleCancelOrder = (orderId: string) => {
-    console.log("Cancel order:", orderId);
-    // Add cancel order logic here
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await orderService.cancelOrder(orderId, "User requested cancellation");
+      // Refresh orders after cancellation
+      const data = await orderService.getOrders();
+      let ordersArray = [];
+      if (Array.isArray(data)) {
+        ordersArray = data;
+      } else if (data && (data as any).orders) {
+        ordersArray = (data as any).orders;
+      } else if (data && (data as any).data) {
+        const dataObj = (data as any).data;
+        ordersArray = Array.isArray(dataObj) ? dataObj : dataObj.orders || [];
+      }
+      setOrders(ordersArray);
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+    }
   };
 
-  const handleRefundOrder = (orderId: string) => {
-    console.log("Refund order:", orderId);
-    // Add refund order logic here
+  const handleRefundOrder = async (orderId: string) => {
+    try {
+      // Add refund logic here
+      console.log("Refund order:", orderId);
+    } catch (error) {
+      console.error("Error refunding order:", error);
+    }
   };
 
   const handleReviewOrder = (orderId: string) => {
     console.log("Review order:", orderId);
-    // Add review order logic here
+    // Navigate to review screen
+    // navigation.navigate("ReviewOrder", { orderId });
   };
 
   const renderActionButton = (order: Order) => {
-    switch (order.status) {
-      case "pending":
-        return (
+    return (
+      <View style={styles.actionButtonContainer}>
+        <TouchableOpacity
+          style={[styles.buyAgainButton, styles.detailsButton]}
+          onPress={() =>
+            navigation.navigate("OrderDetails", { orderId: order._id })
+          }
+        >
+          <Text style={[styles.buyAgainText, styles.detailsButtonText]}>
+            View Details
+          </Text>
+        </TouchableOpacity>
+
+        {order.status === "pending" && (
           <TouchableOpacity
             style={[styles.buyAgainButton, styles.cancelButton]}
             onPress={() => handleCancelOrder(order._id)}
@@ -200,9 +364,9 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
               Cancel
             </Text>
           </TouchableOpacity>
-        );
-      case "shipped":
-        return (
+        )}
+
+        {order.status === "shipped" && (
           <TouchableOpacity
             style={[styles.buyAgainButton, styles.refundButton]}
             onPress={() => handleRefundOrder(order._id)}
@@ -211,9 +375,9 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
               Refund
             </Text>
           </TouchableOpacity>
-        );
-      case "delivered":
-        return (
+        )}
+
+        {order.status === "delivered" && (
           <TouchableOpacity
             style={[styles.buyAgainButton, styles.reviewButton]}
             onPress={() => handleReviewOrder(order._id)}
@@ -222,10 +386,9 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
               Review
             </Text>
           </TouchableOpacity>
-        );
-      default:
-        return null;
-    }
+        )}
+      </View>
+    );
   };
 
   return (
@@ -271,71 +434,118 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
         </View>
 
         <ScrollView style={styles.ordersContainer}>
-          {filteredOrders.map((order) => (
-            <View key={order._id} style={styles.orderCard}>
-              <View style={styles.storeHeader}>
-                <View>
-                  <Text style={styles.storeName}>
-                    Order #{order.orderNumber}
-                  </Text>
-                  <Text style={styles.orderDate}>
-                    {formatDate(order.createdAt)}
-                  </Text>
-                  <Text style={styles.orderDate}>By: {order.user.name}</Text>
-                </View>
-                <Text
-                  style={[styles.orderStatus, getStatusStyle(order.status)]}
-                >
-                  {capitalizeFirstLetter(order.status)}
-                </Text>
-              </View>
+          {filteredOrders.map((order) => {
+            // Validate order data
+            if (!order || !order._id) {
+              console.warn("Invalid order data:", order);
+              return null;
+            }
 
-              {order.items.map((item, index) => (
-                <View key={index} style={styles.productContainer}>
-                  <Image
-                    source={{ uri: item.mainImage }}
-                    style={styles.productImage}
-                    defaultSource={require("../../../assets/images/welcome.png")}
-                  />
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{item.name}</Text>
-                    <View style={styles.productDetails}>
-                      <Text style={styles.quantity}>x{item.quantity}</Text>
-                      {item.size && (
-                        <Text style={styles.sizeText}>Size: {item.size}</Text>
-                      )}
-                      {item.color && (
-                        <Text style={styles.colorText}>
-                          Color: {item.color}
-                        </Text>
-                      )}
-                    </View>
-                    <View style={styles.priceContainer}>
-                      <Text style={styles.price}>
-                        {formatPrice(item.price)}
-                      </Text>
-                    </View>
+            return (
+              <View key={order._id} style={styles.orderCard}>
+                <View style={styles.storeHeader}>
+                  <View>
+                    <Text style={styles.storeName}>
+                      Order #{order.orderNumber || order._id || "Unknown"}
+                    </Text>
+                    <Text style={styles.orderDate}>
+                      {order.createdAt
+                        ? formatDate(order.createdAt)
+                        : "Unknown Date"}
+                    </Text>
+                    <Text style={styles.orderDate}>
+                      By:{" "}
+                      {(order.user as any)?.fullName ||
+                        (order.user as any)?.name ||
+                        "Unknown User"}
+                    </Text>
                   </View>
+                  <Text
+                    style={[
+                      styles.orderStatus,
+                      getStatusStyle(order.status || "unknown"),
+                    ]}
+                  >
+                    {capitalizeFirstLetter(order.status || "unknown")}
+                  </Text>
                 </View>
-              ))}
 
-              <View style={styles.orderFooter}>
-                <Text style={styles.totalText}>
-                  Total {order.items.length} item
-                  {order.items.length > 1 ? "s" : ""}:
-                </Text>
-                <Text style={styles.totalPrice}>
-                  {formatPrice(order.totalPrice)}
-                </Text>
+                {order.items?.map((item: any, index: number) => {
+                  if (!item) {
+                    console.warn("Invalid item data:", item);
+                    return null;
+                  }
+
+                  return (
+                    <View key={index} style={styles.productContainer}>
+                      <Image
+                        source={{
+                          uri:
+                            item.product?.mainImage ||
+                            item.mainImage ||
+                            item.product?.image,
+                        }}
+                        style={styles.productImage}
+                        defaultSource={require("../../../assets/images/welcome.png")}
+                      />
+                      <View style={styles.productInfo}>
+                        <Text style={styles.productName}>
+                          {item.product?.name || item.name || "Unknown Product"}
+                        </Text>
+                        <View style={styles.productDetails}>
+                          <Text style={styles.quantity}>
+                            x{item.quantity || 0}
+                          </Text>
+                          {item.size && (
+                            <Text style={styles.sizeText}>
+                              Size: {item.size}
+                            </Text>
+                          )}
+                          {item.color && (
+                            <Text style={styles.colorText}>
+                              Color: {item.color}
+                            </Text>
+                          )}
+                        </View>
+                        <View style={styles.priceContainer}>
+                          <Text style={styles.price}>
+                            {formatPrice(item.price || 0)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                }) || null}
+
+                <View style={styles.orderFooter}>
+                  <Text style={styles.totalText}>
+                    Total {order.items?.length || 0} item
+                    {(order.items?.length || 0) > 1 && "s"}:
+                  </Text>
+                  <Text style={styles.totalPrice}>
+                    {formatPrice(order.totalPrice || 0)}
+                  </Text>
+                </View>
+
+                {renderActionButton(order)}
               </View>
-
-              {renderActionButton(order)}
-            </View>
-          ))}
+            );
+          })}
 
           {filteredOrders.length === 0 && (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No orders found</Text>
+              <Ionicons name="bag-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>
+                No {selectedStatus} orders found
+              </Text>
+              <Text
+                style={[
+                  styles.emptyText,
+                  { fontSize: 14, color: "#999", marginTop: 5 },
+                ]}
+              >
+                Try selecting a different status
+              </Text>
             </View>
           )}
         </ScrollView>
@@ -556,6 +766,22 @@ const styles = StyleSheet.create<Styles>({
     fontSize: 16,
     color: "#666666",
     fontFamily: "Rubik-Regular",
+  },
+  actionButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  detailsButton: {
+    borderColor: "#007AFF",
+    backgroundColor: "#E3F2FD",
+    flex: 1,
+    minWidth: 100,
+  },
+  detailsButtonText: {
+    color: "#007AFF",
+    fontWeight: "600",
   },
 });
 

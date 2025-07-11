@@ -1,25 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ShareInput from "@/components/common/input/share.input";
 import ProductCard from "@/components/common/ProductCard";
 import { useNavigation } from "@react-navigation/native";
-import * as mockData from "@/mockData";
 import { COLORS } from "@/constants/theme";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { StackNavigationProp } from "@/types/navigation";
 import { RootStackParamList } from "@/types/navigation";
+import api from "@/services/api";
+import { API_ENDPOINTS } from "@/constants/api";
+import { formatVND } from "@/utils/currency";
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [keyword, setKeyword] = useState("");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredProducts = mockData.products.filter(
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(API_ENDPOINTS.PRODUCTS);
+        setProducts(res.data.data?.products || res.data.products || []);
+      } catch (err: any) {
+        setError(err.message || "Lỗi tải sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter(
     (p) => p.name && p.name.toLowerCase().includes(keyword.toLowerCase())
   );
 
@@ -40,42 +61,50 @@ const SearchScreen: React.FC = () => {
           />
         </View>
       </View>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.resultsContainer}
-      >
-        {filteredProducts.length === 0 ? (
-          <Text style={styles.noResult}>No products found.</Text>
-        ) : (
-          <View style={styles.productsWrap}>
-            {filteredProducts.map((p) => (
-              <ProductCard
-                key={String(p.sku)}
-                image={{
-                  uri: String(
-                    p.mainImage || p.inventory?.[0]?.images?.[0] || ""
-                  ),
-                }}
-                name={String(p.name || "")}
-                price={`$${p.price.regular}`}
-                tag={
-                  p.isNew
-                    ? "New"
-                    : p.price.isOnSale
-                      ? `${p.price.discountPercent}% off`
-                      : undefined
-                }
-                onPress={() =>
-                  navigation.navigate("ProductDetails", {
-                    productId: String(p.sku),
-                  })
-                }
-              />
-            ))}
-          </View>
-        )}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color={COLORS.blue}
+          style={{ marginTop: 40 }}
+        />
+      ) : error ? (
+        <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
+          {error}
+        </Text>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.resultsContainer}
+        >
+          {filteredProducts.length === 0 ? (
+            <Text style={styles.noResult}>No products found.</Text>
+          ) : (
+            <View style={styles.productsWrap}>
+              {filteredProducts.map((p) => (
+                <ProductCard
+                  key={String(p.id)}
+                  image={{
+                    uri: String(
+                      p.mainImage || p.inventory?.[0]?.images?.[0] || ""
+                    ),
+                  }}
+                  name={String(p.name || "")}
+                  price={formatVND(
+                    p.discountedPrice || p.price?.regular || p.price
+                  )}
+                  tag={p.isNew ? "New" : p.discountedPrice ? "Sale" : undefined}
+                  onPress={() =>
+                    navigation.navigate("ProductDetails", {
+                      productId: String(p.id),
+                    })
+                  }
+                />
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 };

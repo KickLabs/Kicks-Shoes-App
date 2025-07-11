@@ -5,25 +5,37 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image
+  Image,
 } from "react-native";
 import CustomCheckbox from "./CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import authService from "@/services/auth";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation();
 
   const handleRegister = () => {
     navigation.navigate("Register" as never);
   };
 
-  const handleLogin = () => {
-    navigation.navigate("Profile" as never);
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.login(email, password);
+      setLoading(false);
+      navigation.navigate("Profile" as never);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err?.message || "Login failed. Please check your credentials.");
+    }
   };
 
   return (
@@ -53,7 +65,19 @@ const LoginForm = () => {
           Keep me logged in - applies to all log in options below. More info
         </Text>
       </View>
-      <TouchableOpacity onPress={handleLogin} style={styles.loginBtn}>
+      <TouchableOpacity
+        onPress={handleLogin}
+        style={styles.loginBtn}
+        disabled={loading}
+      >
+        {loading ? (
+          <Ionicons
+            name="reload"
+            size={20}
+            color="#fff"
+            style={{ marginRight: 8 }}
+          />
+        ) : null}
         <Text style={styles.loginBtnText}>EMAIL LOGIN</Text>
         <Ionicons
           name="arrow-forward"
@@ -62,6 +86,11 @@ const LoginForm = () => {
           style={{ marginLeft: 8 }}
         />
       </TouchableOpacity>
+      {error && (
+        <Text style={{ color: "red", textAlign: "center", marginBottom: 8 }}>
+          {error}
+        </Text>
+      )}
       <View style={styles.socialRow}>
         <TouchableOpacity style={styles.socialBtn}>
           <Image
@@ -98,18 +127,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16
+    marginBottom: 16,
   },
   title: {
     fontWeight: "bold",
     fontSize: 22,
-    marginBottom: 4
+    marginBottom: 4,
   },
   forgot: {
     color: "#222",
     textDecorationLine: "underline",
     marginBottom: 10,
-    fontWeight: "500"
+    fontWeight: "500",
   },
   input: {
     borderWidth: 1,
@@ -117,18 +146,18 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 10,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10
+    marginBottom: 10,
   },
   checkboxText: {
     marginLeft: 6,
     fontSize: 13,
     color: "#222",
-    flex: 1
+    flex: 1,
   },
   loginBtn: {
     backgroundColor: "#222",
@@ -137,17 +166,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 6,
     paddingVertical: 12,
-    marginBottom: 12
+    marginBottom: 12,
   },
   loginBtnText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16
+    fontSize: 16,
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10
+    marginBottom: 10,
   },
   socialBtn: {
     flex: 1,
@@ -157,29 +186,29 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   registerRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8
+    marginBottom: 8,
   },
   registerText: {
     fontSize: 14,
-    color: "#222"
+    color: "#222",
   },
   registerLink: {
     fontSize: 14,
     color: "#222",
     fontWeight: "bold",
-    textDecorationLine: "underline"
+    textDecorationLine: "underline",
   },
   terms: {
     fontSize: 12,
     color: "#222",
-    marginTop: 8
-  }
+    marginTop: 8,
+  },
 });
 
 export default LoginForm;

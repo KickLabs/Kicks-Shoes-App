@@ -1,38 +1,95 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { COLORS, SIZES } from "../../constants/theme";
-import { AntDesign, Feather } from "@expo/vector-icons"; // dùng icon đẹp
+import { AntDesign, Feather } from "@expo/vector-icons";
+import { formatVND } from "../../utils/currency";
 
 interface CartItemProps {
+  id: string;
   name: string;
   description: string;
   color: string;
   size: string;
   quantity: number;
   price: number;
+  image: string;
+  onQuantityChange: (id: string, quantity: number) => void;
+  onRemove: (id: string) => void;
 }
 
 const CartItem: React.FC<CartItemProps> = ({
+  id,
   name,
   description,
   color,
   size,
   quantity,
   price,
+  image,
+  onQuantityChange,
+  onRemove,
 }) => {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleQuantityIncrease = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    await onQuantityChange(id, quantity + 1);
+    setIsUpdating(false);
+  };
+
+  const handleQuantityDecrease = async () => {
+    if (isUpdating) return;
+    setIsUpdating(true);
+    if (quantity === 1) {
+      // Show confirmation dialog
+      Alert.alert(
+        "Remove Item",
+        "Are you sure you want to remove this item from your cart?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Remove",
+            onPress: () => onRemove(id),
+            style: "destructive",
+          },
+        ]
+      );
+    } else {
+      await onQuantityChange(id, quantity - 1);
+    }
+    setIsUpdating(false);
+  };
+
+  const handleRemove = () => {
+    Alert.alert(
+      "Remove Item",
+      "Are you sure you want to remove this item from your cart?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          onPress: () => onRemove(id),
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Your Bag</Text>
-      <Text style={styles.subtitle}>
-        Items in your bag not reserved - check out now to make them yours.
-      </Text>
-
       <View style={styles.container}>
         <Image
-          source={{
-            uri: "https://sneakernews.com/wp-content/uploads/2020/12/adidas-Ultra-Boost-1.0-DNA-H68156-8.jpg?w=1140",
-          }}
+          source={{ uri: image }}
           style={styles.image}
+          defaultSource={require("../../../assets/images/welcome.png")}
         />
         <View style={styles.details}>
           <Text style={styles.name}>{name.toUpperCase()}</Text>
@@ -40,15 +97,37 @@ const CartItem: React.FC<CartItemProps> = ({
           <Text style={styles.color}>{color}</Text>
           <View style={styles.row}>
             <Text style={styles.meta}>Size {size}</Text>
-            <Text style={styles.meta}>Quantity {quantity}</Text>
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity
+                onPress={handleQuantityDecrease}
+                disabled={isUpdating}
+                style={[
+                  styles.quantityButton,
+                  isUpdating && styles.disabledButton,
+                ]}
+              >
+                <AntDesign name="minus" size={16} color={COLORS.black} />
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{quantity}</Text>
+              <TouchableOpacity
+                onPress={handleQuantityIncrease}
+                disabled={isUpdating}
+                style={[
+                  styles.quantityButton,
+                  isUpdating && styles.disabledButton,
+                ]}
+              >
+                <AntDesign name="plus" size={16} color={COLORS.black} />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.price}>${price.toFixed(2)}</Text>
+          <Text style={styles.price}>{formatVND(price * quantity)}</Text>
         </View>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.icon}>
             <AntDesign name="hearto" size={20} color={COLORS.gray} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.icon}>
+          <TouchableOpacity style={styles.icon} onPress={handleRemove}>
             <Feather name="trash-2" size={20} color={COLORS.gray} />
           </TouchableOpacity>
         </View>
@@ -59,31 +138,29 @@ const CartItem: React.FC<CartItemProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#F1F1ED",
-    borderRadius: 18,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
     padding: 16,
-    marginVertical: 8,
+    marginVertical: 6,
     marginHorizontal: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 4,
-    color: COLORS.black,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: COLORS.gray,
-    marginBottom: 12,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   container: {
     flexDirection: "row",
     alignItems: "flex-start",
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 16,
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: COLORS.lightGray,
   },
   details: {
     flex: 1,
@@ -91,42 +168,80 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 4,
+    fontFamily: "Rubik-SemiBold",
   },
   description: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.gray,
-    marginBottom: 2,
+    marginBottom: 4,
+    fontFamily: "Rubik-Regular",
   },
   color: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.gray,
-    marginBottom: 6,
+    marginBottom: 8,
+    fontFamily: "Rubik-Regular",
   },
   row: {
     flexDirection: "row",
-    gap: 16,
-    marginBottom: 6,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   meta: {
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.gray,
+    fontFamily: "Rubik-Regular",
   },
   price: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#2F55D4", // xanh đậm
+    color: COLORS.blue,
+    fontFamily: "Rubik-Bold",
+    marginTop: 4,
   },
   actions: {
-    marginLeft: 8,
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 10,
+    marginLeft: 8,
+    height: 80,
   },
   icon: {
-    padding: 6,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 20,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  quantityButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.white,
+    justifyContent: "center",
+    alignItems: "center",
+    marginHorizontal: 2,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  quantityText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginHorizontal: 8,
+    minWidth: 16,
+    textAlign: "center",
+    fontFamily: "Rubik-Medium",
   },
 });
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   SafeAreaView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import authService from "@/services/auth";
+import userService from "@/services/user";
 
 // (Các component ProfileQuickIcon và ProfileMenuItem không thay đổi)
 const ProfileQuickIcon = ({
@@ -45,76 +47,138 @@ const ProfileMenuItem = ({
 const ProfileScreen = ({ navigation }: { navigation: any }) => {
   // Thêm navigation vào props
   const handleNavigate = (screen: string) => navigation.navigate(screen);
-  const handleLogout = () => console.log("User logged out");
+  const handleLogout = async () => {
+    await authService.logout();
+    navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+  };
+
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await userService.getProfile();
+        console.log("Profile data received:", data);
+        setProfile(data);
+      } catch (err: any) {
+        console.log("Profile fetch error:", err);
+        setError("Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Add focus listener to refresh profile when returning from EditProfile
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      const fetchProfile = async () => {
+        try {
+          const data = await userService.getProfile();
+          console.log("Profile data refreshed:", data);
+          setProfile(data);
+        } catch (err: any) {
+          console.log("Profile refresh error:", err);
+        }
+      };
+      fetchProfile();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        showsHorizontalScrollIndicator={false}
-        style={styles.container}
-      >
-        {/* === PART 1: HEADER === */}
-        <View style={styles.headerContainer}>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="camera-outline" size={48} color="#bbb" />
+      {loading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text>Loading profile...</Text>
+        </View>
+      ) : error ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={{ color: "red" }}>{error}</Text>
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          style={styles.container}
+        >
+          {/* === PART 1: HEADER === */}
+          <View style={styles.headerContainer}>
+            <View style={styles.avatarCircle}>
+              <Ionicons name="camera-outline" size={48} color="#bbb" />
+            </View>
+            <Text style={styles.name}>
+              {profile?.fullName || profile?.name || "No Name"}
+            </Text>
+            <Text style={{ color: "#888", marginBottom: 8 }}>
+              {profile?.email || "No Email"}
+            </Text>
+            {/* Cập nhật onPress để điều hướng */}
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate("EditProfile")}
+            >
+              <Text style={styles.editBtnText}>Edit Profile</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.name}>Tran Phuc Tien</Text>
-          {/* Cập nhật onPress để điều hướng */}
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => navigation.navigate("EditProfile")}
-          >
-            <Text style={styles.editBtnText}>Edit Profile</Text>
+
+          {/* ====================================================== */}
+          {/* === PART 2: QUICK ACCESS ICON ROW (ĐÃ THAY ĐỔI) === */}
+          {/* ====================================================== */}
+          <View style={styles.iconRow}>
+            <ProfileQuickIcon
+              icon="bag-outline"
+              label="Orders"
+              onPress={() => navigation.navigate("OrderHistory")}
+            />
+            <ProfileQuickIcon
+              icon="chatbubble-outline"
+              label="Chat"
+              onPress={() => navigation.navigate("Chat")}
+            />
+            <ProfileQuickIcon
+              icon="settings-outline"
+              label="Settings"
+              onPress={() => console.log("Navigate to Settings")}
+            />
+          </View>
+          {/* ====================================================== */}
+
+          {/* === PART 3: ADDITIONAL OPTIONS LIST === */}
+          <View style={styles.menuContainer}>
+            <ProfileMenuItem
+              icon="location-outline"
+              label="Shipping Addresses"
+              onPress={() => console.log("Navigate to Shipping Addresses")} // Tạm thời giữ console.log
+            />
+            <ProfileMenuItem
+              icon="wallet-outline"
+              label="Payment Methods"
+              onPress={() => console.log("Navigate to Payment Methods")}
+            />
+            <ProfileMenuItem
+              icon="help-circle-outline"
+              label="Help & Support"
+              onPress={() => console.log("Navigate to Help")}
+            />
+          </View>
+
+          {/* === PART 4: LOGOUT BUTTON === */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
-        </View>
-
-        {/* ====================================================== */}
-        {/* === PART 2: QUICK ACCESS ICON ROW (ĐÃ THAY ĐỔI) === */}
-        {/* ====================================================== */}
-        <View style={styles.iconRow}>
-          <ProfileQuickIcon
-            icon="bag-outline"
-            label="Orders"
-            onPress={() => navigation.navigate("OrderHistory")}
-          />
-          <ProfileQuickIcon
-            icon="chatbubble-outline"
-            label="Chat"
-            onPress={() => navigation.navigate("Chat")}
-          />
-          <ProfileQuickIcon
-            icon="settings-outline"
-            label="Settings"
-            onPress={() => console.log("Navigate to Settings")}
-          />
-        </View>
-        {/* ====================================================== */}
-
-        {/* === PART 3: ADDITIONAL OPTIONS LIST === */}
-        <View style={styles.menuContainer}>
-          <ProfileMenuItem
-            icon="location-outline"
-            label="Shipping Addresses"
-            onPress={() => console.log("Navigate to Shipping Addresses")} // Tạm thời giữ console.log
-          />
-          <ProfileMenuItem
-            icon="wallet-outline"
-            label="Payment Methods"
-            onPress={() => console.log("Navigate to Payment Methods")}
-          />
-          <ProfileMenuItem
-            icon="help-circle-outline"
-            label="Help & Support"
-            onPress={() => console.log("Navigate to Help")}
-          />
-        </View>
-
-        {/* === PART 4: LOGOUT BUTTON === */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
