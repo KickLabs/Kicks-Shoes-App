@@ -226,6 +226,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,
@@ -302,6 +303,12 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginLeft: 16,
     marginTop: 16,
+  },
+  productWrapper: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
 });
 
