@@ -1,6 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { COLORS } from "../../constants/theme";
+import { formatVND } from "@/utils/currency";
 
 interface OrderSummaryWithPromoProps {
   itemCount: number;
@@ -9,7 +16,12 @@ interface OrderSummaryWithPromoProps {
   total: number;
 }
 
-const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({ itemCount, subtotal, delivery, total }) => {
+const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
+  itemCount,
+  subtotal,
+  delivery,
+  total,
+}) => {
   const [showPromoInput, setShowPromoInput] = useState(false);
 
   return (
@@ -17,17 +29,20 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({ itemCount
       <Text style={styles.title}>Order Summary</Text>
       <View style={styles.row}>
         <Text>{itemCount} ITEM</Text>
-        <Text>${subtotal.toFixed(2)}</Text>
+        <Text>{formatVND(subtotal)}</Text>
       </View>
       <View style={styles.row}>
         <Text>Delivery</Text>
-        <Text>${delivery.toFixed(2)}</Text>
+        <Text>{formatVND(delivery)}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.totalText}>Total</Text>
-        <Text style={styles.totalText}>${total.toFixed(2)}</Text>
+        <Text style={styles.totalText}>{formatVND(total)}</Text>
       </View>
-      <TouchableOpacity onPress={() => setShowPromoInput(!showPromoInput)} style={styles.promoLabel}>
+      <TouchableOpacity
+        onPress={() => setShowPromoInput(!showPromoInput)}
+        style={styles.promoLabel}
+      >
         <Text style={styles.promoText}>User a promo code</Text>
       </TouchableOpacity>
       {showPromoInput && (

@@ -37,11 +37,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </Text>
       <TouchableOpacity style={styles.button} onPress={onPress}>
         <View style={styles.buttonTextRow}>
-          <Text style={styles.buttonText}>VIEW PRODUCT</Text>
-          <Text style={styles.price}>
-            {" "}
-            - ${Math.round(Number(price.toString().replace(/[^\d.]/g, "")))}
-          </Text>
+          <Text style={styles.buttonText}>DETAILS</Text>
+          <Text style={styles.price}> - {price}</Text>
         </View>
       </TouchableOpacity>
     </View>

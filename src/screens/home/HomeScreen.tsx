@@ -1,45 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, Image, TouchableOpacity } from "react-native";
 import Banner from "../../components/common/Banner";
 import ProductCard from "../../components/common/ProductCard";
 import CategorySection from "../../components/common/CategorySection";
 import ReviewCard from "../../components/common/ReviewCard";
 import { COLORS } from "../../constants/theme";
-import { products as mockProducts } from "../../mockData";
+import api from "../../services/api";
+import { API_ENDPOINTS } from "../../constants/api";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
-
-const bannerProduct = mockProducts[0];
-const bannerImages = bannerProduct?.inventory?.[0]?.images || [];
-
-const newProducts = mockProducts
-  .filter((p) => p.inventory?.[0]?.images?.[0])
-  .slice(0, 4);
-
-const brandMap: { [key: string]: (typeof mockProducts)[0] } = {};
-mockProducts.forEach((p) => {
-  if (p.inventory?.[0]?.images?.[0] && !brandMap[p.brand as string])
-    brandMap[p.brand as string] = p;
-});
-const categories = (Object.values(brandMap) as typeof mockProducts)
-  .slice(0, 2)
-  .map((p) => ({
-    name: p.brand + " Shoes",
-    image: { uri: p.inventory[0].images[0] },
-    onPress: () => {},
-  }));
-
-const reviews = [
-  {
-    avatar: { uri: newProducts[0]?.inventory[0]?.images[0] },
-    name: newProducts[0]?.name || "Good Quality",
-    rating: newProducts[0]?.rating || 5.0,
-    content:
-      newProducts[0]?.description || "I highly recommend shopping from kicks",
-    productImage: { uri: newProducts[0]?.inventory[0]?.images[0] },
-  },
-];
+import { Product } from "../../types";
+import { formatVND } from "../../utils/currency";
 
 const HomeScreen = () => {
   type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -49,11 +21,77 @@ const HomeScreen = () => {
   };
 
   const [bannerIdx, setBannerIdx] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get(API_ENDPOINTS.PRODUCTS);
+        setProducts(res.data.data?.products || res.data.products || []);
+      } catch (err: any) {
+        setError(err.message || "Lỗi tải sản phẩm");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const handleShopNow = () => {};
   const handleBannerThumb = (idx: number) => setBannerIdx(idx);
   const handleCategoryPrev = () => {};
   const handleCategoryNext = () => {};
+
+  // Lấy sản phẩm đầu tiên làm banner
+  const bannerProduct = products[0];
+  // Ưu tiên lấy mainImage, nếu không có thì lấy inventory[0].images[0]
+  const bannerImages = bannerProduct
+    ? bannerProduct.inventory?.[0]?.images?.length > 0
+      ? bannerProduct.inventory[0].images
+      : bannerProduct.mainImage
+        ? [bannerProduct.mainImage]
+        : []
+    : [];
+
+  // Lấy 4 sản phẩm mới nhất
+  const newProducts = products.slice(0, 4);
+
+  // Lấy brand đại diện cho category
+  const brandMap: { [key: string]: Product } = {};
+  products.forEach((p) => {
+    if (p.inventory?.[0]?.images?.[0] && !brandMap[p.brand as string])
+      brandMap[p.brand as string] = p;
+  });
+  const categories = (Object.values(brandMap) as Product[])
+    .slice(0, 2)
+    .map((p) => ({
+      name: p.brand + " Shoes",
+      image: { uri: p.inventory[0].images[0] },
+      onPress: () => {},
+    }));
+
+  // Dummy reviews
+  const reviews = [
+    {
+      avatar: {
+        uri:
+          newProducts[0]?.mainImage ||
+          newProducts[0]?.inventory?.[0]?.images?.[0],
+      },
+      name: newProducts[0]?.name || "Good Quality",
+      rating: newProducts[0]?.rating || 5.0,
+      content:
+        newProducts[0]?.description || "I highly recommend shopping from kicks",
+      productImage: {
+        uri:
+          newProducts[0]?.mainImage ||
+          newProducts[0]?.inventory?.[0]?.images?.[0],
+      },
+    },
+  ];
 
   return (
     <ScrollView
@@ -62,7 +100,7 @@ const HomeScreen = () => {
       style={{ flex: 1 }}
     >
       <View style={{ paddingTop: 80 }}>
-        {bannerProduct && (
+        {bannerProduct && bannerImages.length > 0 && (
           <Banner
             title="DO IT RIGHT"
             subtitle={`${bannerProduct.brand}\n${bannerProduct.description}`}
@@ -130,24 +168,36 @@ const HomeScreen = () => {
             padding: 16,
           }}
         >
-          {newProducts.map((p) => (
-            <ProductCard
-              key={p.sku}
-              image={{ uri: p.inventory[0].images[0] }}
-              name={p.name!}
-              price={`$${p.price.regular}`}
-              tag={
-                p.isNew
-                  ? "New"
-                  : p.price.isOnSale
-                    ? `${p.price.discountPercent}% off`
-                    : undefined
-              }
-              onPress={() =>
-                navigation.navigate("ProductDetails", { productId: p.sku! })
-              }
-            />
-          ))}
+          {loading ? (
+            <Text>Loading product...</Text>
+          ) : error ? (
+            <Text style={{ color: "red" }}>{error}</Text>
+          ) : (
+            newProducts.map((p: Product) => {
+              // Lấy giá ưu tiên: discountedPrice > price.regular > price
+              const originalPrice =
+                p.discountedPrice || p.price?.regular || p.price;
+              const formattedPrice = formatVND(originalPrice);
+
+              return (
+                <ProductCard
+                  key={p.id}
+                  image={{
+                    uri:
+                      p.mainImage ||
+                      p.images?.[0] ||
+                      p.inventory?.[0]?.images?.[0],
+                  }}
+                  name={p.name}
+                  price={formattedPrice}
+                  tag={p.isNew ? "New" : p.discountedPrice ? "Sale" : undefined}
+                  onPress={() =>
+                    navigation.navigate("ProductDetails", { productId: p.id })
+                  }
+                />
+              );
+            })
+          )}
         </View>
         {/* Categories Section */}
         <CategorySection

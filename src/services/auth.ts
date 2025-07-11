@@ -1,57 +1,47 @@
-import api from "./api";
-import { ApiResponse } from "../types";
+import apiService from "./api";
+import { API_ENDPOINTS } from "../constants/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface LoginResponse {
-  tokens: {
-    access_token: string;
-    refresh_token: string;
-  };
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
+class AuthService {
+  async login(email: string, password: string) {
+    const response = await apiService.post(API_ENDPOINTS.LOGIN, {
+      email,
+      password,
+    });
+    const data = response.data as any;
+    console.log("LOGIN RESPONSE:", data);
+    // Chấp nhận nhiều kiểu response khác nhau
+    const token =
+      data.token ||
+      data.data?.token ||
+      data.accessToken ||
+      data.data?.accessToken ||
+      data.tokens?.accessToken; // Thêm dòng này!
+    console.log("TOKEN LƯU:", token);
+    if (token) {
+      await AsyncStorage.setItem("accessToken", token);
+    }
+    return data.data || data; // trả về user info nếu cần
+  }
+
+  async register(name: string, email: string, password: string) {
+    const response = await apiService.post(API_ENDPOINTS.REGISTER, {
+      name,
+      email,
+      password,
+    });
+    const data = response.data as any;
+    return data.data;
+  }
+
+  async logout() {
+    await AsyncStorage.removeItem("accessToken");
+    try {
+      await apiService.post(API_ENDPOINTS.LOGOUT);
+    } catch (e) {
+      // Có thể bỏ qua lỗi này
+    }
+  }
 }
 
-interface RegisterResponse {
-  message: string;
-  statusCode: number;
-}
-
-export const loginAPI = async (
-  email: string,
-  password: string
-): Promise<ApiResponse<LoginResponse>> => {
-  return api.post<LoginResponse>("/auth/login", { email, password });
-};
-
-export const registerAPI = async (
-  name: string,
-  email: string,
-  password: string
-): Promise<ApiResponse<RegisterResponse>> => {
-  return api.post<RegisterResponse>("/auth/register", {
-    name,
-    email,
-    password,
-  });
-};
-
-export const verifyEmailAPI = async (
-  token: string
-): Promise<ApiResponse<any>> => {
-  return api.post<any>("/auth/verify-email", { token });
-};
-
-export const forgotPasswordAPI = async (
-  email: string
-): Promise<ApiResponse<any>> => {
-  return api.post<any>("/auth/forgot-password", { email });
-};
-
-export const resetPasswordAPI = async (
-  token: string,
-  password: string
-): Promise<ApiResponse<any>> => {
-  return api.post<any>("/auth/reset-password", { token, password });
-};
+export default new AuthService();

@@ -22,6 +22,7 @@ export type RootStackParamList = {
   CheckoutScreen: undefined;
   MainTabs: undefined;
   ListingScreen: undefined;
+  SearchScreen: undefined;
 };
 
 export type OrderStatus =

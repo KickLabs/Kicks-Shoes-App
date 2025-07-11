@@ -7,6 +7,7 @@ import {
   TextInput,
 } from "react-native";
 import { COLORS } from "../../constants/theme";
+import { formatVND } from "../../utils/currency";
 
 interface OrderSummaryWithPromoProps {
   itemCount: number;
@@ -27,22 +28,24 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
     <View style={styles.container}>
       <Text style={styles.title}>Order Summary</Text>
       <View style={styles.row}>
-        <Text>{itemCount} ITEM</Text>
-        <Text>${subtotal.toFixed(2)}</Text>
+        <Text>
+          {itemCount} ITEM{itemCount > 1 ? "S" : ""}
+        </Text>
+        <Text>{formatVND(subtotal)}</Text>
       </View>
       <View style={styles.row}>
         <Text>Delivery</Text>
-        <Text>${delivery.toFixed(2)}</Text>
+        <Text>{delivery === 0 ? "Free" : formatVND(delivery)}</Text>
       </View>
       <View style={styles.row}>
         <Text style={styles.totalText}>Total</Text>
-        <Text style={styles.totalText}>${total.toFixed(2)}</Text>
+        <Text style={styles.totalText}>{formatVND(total)}</Text>
       </View>
       <TouchableOpacity
         onPress={() => setShowPromoInput(!showPromoInput)}
         style={styles.promoLabel}
       >
-        <Text style={styles.promoText}>User a promo code</Text>
+        <Text style={styles.promoText}>Use a promo code</Text>
       </TouchableOpacity>
       {showPromoInput && (
         <TextInput style={styles.input} placeholder="Enter promo code" />
@@ -59,7 +62,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   title: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,

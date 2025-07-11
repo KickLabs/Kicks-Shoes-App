@@ -15,6 +15,7 @@ import LoginScreen from "../screens/auth/LoginScreen";
 import RegisterScreen from "../screens/auth/RegisterScreen";
 import WishlistScreen from "../screens/wishlist/WishlistScreen";
 import OrderHistory from "../screens/order/OrderHistory";
+import OrderDetailsScreen from "../screens/order/OrderDetailsScreen";
 import OrderPending from "../screens/order/OrderPending";
 import OrderProcessing from "../screens/order/OrderProcessing";
 import OrderShipped from "../screens/order/OrderShipped";
@@ -38,6 +39,7 @@ const CartStack = createStackNavigator();
 const WishlistStack = createStackNavigator();
 const OrderStack = createStackNavigator();
 const ChatStack = createStackNavigator();
+const ProductStack = createStackNavigator();
 
 const AuthStackScreen = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -75,6 +77,7 @@ const WishlistStackScreen = () => (
 const OrderStackScreen = () => (
   <OrderStack.Navigator screenOptions={{ headerShown: false }}>
     <OrderStack.Screen name="OrderHistory" component={OrderHistory} />
+    <OrderStack.Screen name="OrderDetails" component={OrderDetailsScreen} />
     <OrderStack.Screen name="OrderPending" component={OrderPending} />
     <OrderStack.Screen name="OrderProcessing" component={OrderProcessing} />
     <OrderStack.Screen name="OrderShipped" component={OrderShipped} />
@@ -84,12 +87,18 @@ const OrderStackScreen = () => (
   </OrderStack.Navigator>
 );
 
+const ProductStackScreen = () => (
+  <ProductStack.Navigator screenOptions={{ header: () => <Header /> }}>
+    <ProductStack.Screen name="ListingScreen" component={ListingScreen} />
+  </ProductStack.Navigator>
+);
+
 const TabNavigator = () => (
   <Tab.Navigator
     tabBar={(props) => <Footer {...props} />}
     screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Home" component={HomeStackScreen} />
-    <Tab.Screen name="ListingScreen" component={ListingScreen} />
+    <Tab.Screen name="ListingScreen" component={ProductStackScreen} />
     <Tab.Screen name="Cart" component={CartStackScreen} />
     <Tab.Screen name="Wishlist" component={WishlistStackScreen} />
     <Tab.Screen name="OrderHistory" component={OrderStackScreen} />
@@ -104,7 +113,6 @@ const AppNavigator = () => {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Main" component={TabNavigator} />
         <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
-        <Stack.Screen name="ListingScreen" component={ListingScreen} />
         <Stack.Screen name="CheckoutScreen" component={CheckoutScreen} />
         <Stack.Screen name="SearchScreen" component={SearchScreen} />
       </Stack.Navigator>

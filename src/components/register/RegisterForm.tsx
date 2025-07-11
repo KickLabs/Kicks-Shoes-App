@@ -5,11 +5,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Image
+  Image,
 } from "react-native";
 import { Formik } from "formik";
 import CustomCheckbox from "../../components/login/CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
+import authService from "@/services/auth";
+import { useNavigation } from "@react-navigation/native";
 
 interface RegisterFormProps {
   onRegister: (name: string, email: string, password: string) => void;
@@ -21,18 +23,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16
+    marginBottom: 16,
   },
   title: {
     fontWeight: "bold",
     fontSize: 22,
-    marginBottom: 4
+    marginBottom: 4,
   },
   socialRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-    marginTop: 8
+    marginTop: 8,
   },
   socialBtn: {
     flex: 1,
@@ -42,20 +44,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 4,
     padding: 8,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   orText: {
     textAlign: "center",
     fontWeight: "bold",
     marginVertical: 8,
-    color: "#222"
+    color: "#222",
   },
   label: {
     fontWeight: "bold",
     fontSize: 16,
     marginTop: 8,
     marginBottom: 4,
-    color: "#222"
+    color: "#222",
   },
   input: {
     borderWidth: 1,
@@ -63,49 +65,49 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     marginBottom: 10,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   genderRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8
+    marginBottom: 8,
   },
   genderOption: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 16
+    marginRight: 16,
   },
   checkboxText: {
     marginLeft: 10,
     fontSize: 13,
     color: "#222",
-    flex: 1
+    flex: 1,
   },
   termsRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 4
+    marginBottom: 4,
   },
   passwordDesc: {
     fontSize: 12,
     color: "#555",
-    marginBottom: 8
+    marginBottom: 8,
   },
   registerRow: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8
+    marginBottom: 8,
   },
   registerText: {
     fontSize: 14,
-    color: "#222"
+    color: "#222",
   },
   registerLink: {
     fontSize: 14,
     color: "#222",
     fontWeight: "bold",
-    textDecorationLine: "underline"
+    textDecorationLine: "underline",
   },
   loginBtn: {
     backgroundColor: "#222",
@@ -114,29 +116,46 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 6,
     paddingVertical: 12,
-    marginBottom: 12
+    marginBottom: 12,
   },
   loginBtnText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16
-  }
+    fontSize: 16,
+  },
 });
 
-const RegisterForm: React.FC<RegisterFormProps> = ({
-  onRegister,
-  onNavigateToLogin
-}) => {
+const RegisterForm: React.FC = () => {
   const [gender, setGender] = useState("");
   const [agree, setAgree] = useState(false);
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation();
+
+  const handleRegister = async (
+    name: string,
+    email: string,
+    password: string
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await authService.register(name, email, password);
+      setLoading(false);
+      navigation.navigate("Login" as never);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err?.message || "Register failed. Please try again.");
+    }
+  };
 
   return (
     <Formik
       initialValues={{ firstName: "", lastName: "", email: "", password: "" }}
       onSubmit={(values) => {
         if (!agree) return;
-        onRegister(
+        handleRegister(
           values.firstName + " " + values.lastName,
           values.email,
           values.password
@@ -241,7 +260,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             </Text>
           </View>
 
-          <TouchableOpacity style={styles.loginBtn}>
+          <TouchableOpacity
+            onPress={handleSubmit as any}
+            style={styles.loginBtn}
+            disabled={loading || !agree}
+          >
+            {loading ? (
+              <Ionicons
+                name="reload"
+                size={20}
+                color="#fff"
+                style={{ marginRight: 8 }}
+              />
+            ) : null}
             <Text style={styles.loginBtnText}>REGISTER</Text>
             <Ionicons
               name="arrow-forward"
@@ -250,9 +281,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
               style={{ marginLeft: 8 }}
             />
           </TouchableOpacity>
+          {error && (
+            <Text
+              style={{ color: "red", textAlign: "center", marginBottom: 8 }}
+            >
+              {error}
+            </Text>
+          )}
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Already have an account? </Text>
-            <TouchableOpacity onPress={onNavigateToLogin}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Login" as never)}
+            >
               <Text style={styles.registerLink}>Login</Text>
             </TouchableOpacity>
           </View>
