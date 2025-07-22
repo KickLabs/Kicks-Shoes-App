@@ -14,11 +14,13 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Modal
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as adminService from "../../services/adminService";
+import { Picker } from "@react-native-picker/picker";
 
 const { width, height } = Dimensions.get("window");
 
@@ -34,6 +36,7 @@ interface DashboardStats {
 interface User {
   id: string;
   fullName: string;
+  username?: string;
   email: string;
   role: string;
   isActive: boolean;
@@ -41,6 +44,10 @@ interface User {
   avatar?: string;
   phone?: string;
   address?: string;
+  gender?: string;
+  dateOfBirth?: string;
+  isVerified?: boolean;
+  reward_point?: number;
 }
 
 interface Product {
@@ -91,13 +98,19 @@ const AdminDashboard: React.FC = () => {
     totalOrders: 0,
     totalRevenue: 0,
     totalCategories: 0,
-    totalConversations: 0,
+    totalConversations: 0
   });
 
   const [users, setUsers] = useState<User[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderDetailVisible, setOrderDetailVisible] = useState(false);
+  const [orderStatusDraft, setOrderStatusDraft] = useState<string>("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userDetailVisible, setUserDetailVisible] = useState(false);
+  const [banLoading, setBanLoading] = useState(false);
 
   useEffect(() => {
     loadUserInfo();
@@ -118,7 +131,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] Debug token check:", {
         hasUserInfo: !!userInfo,
         hasToken: !!token,
-        tokenLength: token?.length || 0,
+        tokenLength: token?.length || 0
       });
 
       if (userInfo) {
@@ -176,8 +189,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never),
-          },
+            onPress: () => navigation.navigate("Login" as never)
+          }
         ]);
       } else {
         Alert.alert(
@@ -194,6 +207,7 @@ const AdminDashboard: React.FC = () => {
 
       // Load real users from API
       const apiUsers = await adminService.getAdminUsers();
+      console.log("API users:", apiUsers);
 
       // Map API data to frontend format
       const mappedUsers: User[] = apiUsers.map((user) => ({
@@ -201,13 +215,13 @@ const AdminDashboard: React.FC = () => {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
-        isActive: user.isActive,
+        isActive: user.status, // SỬA ĐÚNG TRƯỜNG TRẠNG THÁI
         createdAt: user.createdAt,
         avatar:
           user.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=3b82f6&color=fff`,
         phone: user.phone,
-        address: user.address,
+        address: user.address
       }));
 
       setUsers(mappedUsers);
@@ -218,8 +232,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never),
-          },
+            onPress: () => navigation.navigate("Login" as never)
+          }
         ]);
       } else {
         Alert.alert("Error", "Failed to load users. Please try again.");
@@ -278,7 +292,7 @@ const AdminDashboard: React.FC = () => {
           isPublished: product.status || product.isPublished || false,
           images: product.images || [],
           image:
-            product.mainImage || (product.images && product.images[0]) || "",
+            product.mainImage || (product.images && product.images[0]) || ""
         };
       });
 
@@ -287,7 +301,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] First product image data:", {
         mainImage: apiProducts[0]?.mainImage,
         images: apiProducts[0]?.images,
-        mappedImage: mappedProducts[0]?.image,
+        mappedImage: mappedProducts[0]?.image
       });
     } catch (error: any) {
       console.error("Error loading products:", error);
@@ -295,8 +309,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never),
-          },
+            onPress: () => navigation.navigate("Login" as never)
+          }
         ]);
       } else {
         Alert.alert("Error", "Failed to load products. Please try again.");
@@ -339,7 +353,7 @@ const AdminDashboard: React.FC = () => {
         isActive: category.isActive,
         image:
           category.image ||
-          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`,
+          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`
       }));
 
       setCategories(mappedCategories);
@@ -353,8 +367,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never),
-          },
+            onPress: () => navigation.navigate("Login" as never)
+          }
         ]);
       } else {
         Alert.alert("Error", "Failed to load categories. Please try again.");
@@ -401,7 +415,7 @@ const AdminDashboard: React.FC = () => {
         status: order.status || "pending",
         createdAt: order.createdAt
           ? new Date(order.createdAt).toLocaleDateString("vi-VN")
-          : new Date().toLocaleDateString("vi-VN"),
+          : new Date().toLocaleDateString("vi-VN")
       }));
 
       setOrders(mappedOrders);
@@ -412,8 +426,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never),
-          },
+            onPress: () => navigation.navigate("Login" as never)
+          }
         ]);
       } else {
         Alert.alert("Error", "Failed to load orders. Please try again.");
@@ -480,7 +494,7 @@ const AdminDashboard: React.FC = () => {
                 "userInfo",
                 "refreshToken",
                 "adminSession",
-                "lastLoginTime",
+                "lastLoginTime"
               ]);
 
               // Clear current user state
@@ -493,7 +507,7 @@ const AdminDashboard: React.FC = () => {
                 totalOrders: 0,
                 totalRevenue: 0,
                 totalCategories: 0,
-                totalConversations: 0,
+                totalConversations: 0
               });
               setProducts([]);
               setCategories([]);
@@ -507,15 +521,15 @@ const AdminDashboard: React.FC = () => {
               // Navigate to login screen
               navigation.reset({
                 index: 0,
-                routes: [{ name: "Login" as never }],
+                routes: [{ name: "Login" as never }]
               });
             } catch (error) {
               console.error("Error during admin logout:", error);
               setLoading(false);
               Alert.alert("Error", "Failed to logout. Please try again.");
             }
-          },
-        },
+          }
+        }
       ]
     );
   };
@@ -523,7 +537,7 @@ const AdminDashboard: React.FC = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "VND",
+      currency: "VND"
     }).format(amount);
   };
 
@@ -551,13 +565,13 @@ const AdminDashboard: React.FC = () => {
     {
       id: "dashboard",
       title: "Dashboard",
-      icon: "speedometer-outline" as const,
+      icon: "speedometer-outline" as const
     },
     { id: "products", title: "Products", icon: "cube-outline" as const },
     { id: "categories", title: "Categories", icon: "grid-outline" as const },
     { id: "users", title: "Users", icon: "people-outline" as const },
     { id: "orders", title: "Orders", icon: "receipt-outline" as const },
-    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const },
+    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const }
   ];
 
   const renderTabButton = (tabId: string, title: string, icon: string) => (
@@ -565,7 +579,7 @@ const AdminDashboard: React.FC = () => {
       key={tabId}
       style={[
         styles.tabButton,
-        selectedTab === tabId && styles.activeTabButton,
+        selectedTab === tabId && styles.activeTabButton
       ]}
       onPress={() => setSelectedTab(tabId)}
     >
@@ -713,7 +727,7 @@ const AdminDashboard: React.FC = () => {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: getStatusColor(order.status) },
+                        { backgroundColor: getStatusColor(order.status) }
                       ]}
                     >
                       <Text style={styles.statusText}>{order.status}</Text>
@@ -826,7 +840,7 @@ const AdminDashboard: React.FC = () => {
               <View style={styles.categoryCard}>
                 <Image
                   source={{
-                    uri: item.image || "https://via.placeholder.com/80x80",
+                    uri: item.image || "https://via.placeholder.com/80x80"
                   }}
                   style={styles.categoryImage}
                 />
@@ -843,10 +857,8 @@ const AdminDashboard: React.FC = () => {
                       style={[
                         styles.statusBadge,
                         {
-                          backgroundColor: item.isActive
-                            ? "#27ae60"
-                            : "#6c757d",
-                        },
+                          backgroundColor: item.isActive ? "#27ae60" : "#6c757d"
+                        }
                       ]}
                     >
                       <Text style={styles.statusText}>
@@ -876,6 +888,29 @@ const AdminDashboard: React.FC = () => {
     );
   };
 
+  const openUserDetail = (user: User) => {
+    setSelectedUser(user);
+    setUserDetailVisible(true);
+  };
+  const closeUserDetail = () => {
+    setUserDetailVisible(false);
+    setSelectedUser(null);
+  };
+  const handleToggleUserStatus = async () => {
+    if (!selectedUser) return;
+    try {
+      setBanLoading(true);
+      await adminService.toggleUserStatus(selectedUser.id);
+      await loadUsers(); // Refetch users from server
+      setUserDetailVisible(false); // Đóng popup sau khi thao tác thành công
+      setSelectedUser(null);
+    } catch (e) {
+      Alert.alert("Error", "Failed to update user status");
+    } finally {
+      setBanLoading(false);
+    }
+  };
+
   const renderUsers = () => (
     <ScrollView
       style={styles.content}
@@ -900,33 +935,134 @@ const AdminDashboard: React.FC = () => {
           </TouchableOpacity>
         )}
       </View>
-
-      {users.map((user) => (
-        <View key={user.id} style={styles.userCard}>
-          <View style={styles.userAvatar}>
-            <Text style={styles.userInitial}>
-              {user.fullName.charAt(0).toUpperCase()}
-            </Text>
-          </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.fullName}</Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
-            <Text style={styles.userRole}>Role: {user.role}</Text>
-          </View>
-          <View style={styles.userStatus}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: user.isActive ? "#10b981" : "#ef4444" },
-              ]}
-            >
-              <Text style={styles.statusText}>
-                {user.isActive ? "Active" : "Inactive"}
+      {users
+        .filter(
+          (user) =>
+            user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .map((user) => (
+          <TouchableOpacity
+            key={user.id}
+            style={styles.userCard}
+            onPress={() => openUserDetail(user)}
+          >
+            <View style={styles.userAvatar}>
+              <Text style={styles.userInitial}>
+                {user.fullName.charAt(0).toUpperCase()}
               </Text>
             </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{user.fullName}</Text>
+              <Text style={styles.userEmail}>{user.email}</Text>
+              <Text style={styles.userRole}>Role: {user.role}</Text>
+            </View>
+            <View style={styles.userStatus}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: user.isActive ? "#10b981" : "#ef4444" }
+                ]}
+              >
+                <Text style={styles.statusText}>
+                  {user.isActive ? "Active" : "Inactive"}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      {/* Modal chi tiết user */}
+      <Modal
+        visible={userDetailVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeUserDetail}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)"
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              width: "85%"
+            }}
+          >
+            {selectedUser && (
+              <>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
+                >
+                  {selectedUser.fullName}
+                </Text>
+                <Text>Username: {selectedUser.username || "-"}</Text>
+                <Text>Email: {selectedUser.email}</Text>
+                <Text>Role: {selectedUser.role}</Text>
+                <Text>Phone: {selectedUser.phone || "-"}</Text>
+                <Text>Address: {selectedUser.address || "-"}</Text>
+                <Text>Gender: {selectedUser.gender || "-"}</Text>
+                <Text>
+                  Date of Birth:{" "}
+                  {selectedUser.dateOfBirth
+                    ? new Date(selectedUser.dateOfBirth).toLocaleDateString()
+                    : "-"}
+                </Text>
+                <Text>
+                  Status: {selectedUser.isActive ? "Active" : "Inactive"}
+                </Text>
+                <Text>Verified: {selectedUser.isVerified ? "Yes" : "No"}</Text>
+                <Text>Reward Points: {selectedUser.reward_point ?? 0}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 16
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={closeUserDetail}
+                    style={{
+                      flex: 1,
+                      marginRight: 8,
+                      backgroundColor: "#e5e7eb",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text style={{ color: "#374151", fontWeight: "600" }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleToggleUserStatus}
+                    style={{
+                      flex: 1,
+                      backgroundColor: selectedUser.isActive
+                        ? "#ef4445"
+                        : "#10b981",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center"
+                    }}
+                    disabled={banLoading}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>
+                      {selectedUser.isActive ? "Ban" : "Unban"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </View>
-      ))}
+      </Modal>
     </ScrollView>
   );
 
@@ -977,7 +1113,7 @@ const AdminDashboard: React.FC = () => {
                   uri:
                     item.image ||
                     item.images[0] ||
-                    "https://via.placeholder.com/80x80",
+                    "https://via.placeholder.com/80x80"
                 }}
                 style={styles.productImage}
               />
@@ -998,7 +1134,7 @@ const AdminDashboard: React.FC = () => {
                   <View
                     style={[
                       styles.statusBadge,
-                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" },
+                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" }
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1011,8 +1147,8 @@ const AdminDashboard: React.FC = () => {
                       {
                         backgroundColor: item.isPublished
                           ? "#1a1a1a"
-                          : "#6c757d",
-                      },
+                          : "#6c757d"
+                      }
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1041,6 +1177,29 @@ const AdminDashboard: React.FC = () => {
     </View>
   );
 
+  const openOrderDetail = (order: Order) => {
+    setSelectedOrder(order);
+    setOrderStatusDraft(order.status);
+    setOrderDetailVisible(true);
+  };
+  const closeOrderDetail = () => {
+    setOrderDetailVisible(false);
+    setSelectedOrder(null);
+  };
+  const handleChangeOrderStatus = async () => {
+    if (!selectedOrder) return;
+    try {
+      setLoading(true);
+      await adminService.updateOrderStatus(selectedOrder.id, orderStatusDraft);
+      await loadOrders();
+      closeOrderDetail();
+    } catch (e) {
+      Alert.alert("Error", "Failed to update order status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderOrders = () => (
     <ScrollView
       style={styles.content}
@@ -1065,30 +1224,138 @@ const AdminDashboard: React.FC = () => {
           </TouchableOpacity>
         )}
       </View>
-
-      {orders.map((order) => (
-        <View key={order.id} style={styles.orderCard}>
-          <View style={styles.orderHeader}>
-            <Text style={styles.orderNumber}>{order.orderNumber}</Text>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(order.status) },
-              ]}
-            >
-              <Text style={styles.statusText}>{order.status}</Text>
+      {orders
+        .filter(
+          (order) =>
+            order.orderNumber
+              .toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            (typeof order.user === "string"
+              ? order.user.toLowerCase().includes(searchQuery.toLowerCase())
+              : order.user.fullName
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()))
+        )
+        .map((order) => (
+          <TouchableOpacity
+            key={order.id}
+            style={styles.orderCard}
+            onPress={() => openOrderDetail(order)}
+          >
+            <View style={styles.orderHeader}>
+              <Text style={styles.orderNumber}>{order.orderNumber}</Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: getStatusColor(order.status) }
+                ]}
+              >
+                <Text style={styles.statusText}>{order.status}</Text>
+              </View>
             </View>
+            <Text style={styles.orderUser}>
+              Customer:{" "}
+              {typeof order.user === "string"
+                ? order.user
+                : order.user.fullName}
+            </Text>
+            <Text style={styles.orderPrice}>
+              Total: {formatCurrency(order.totalPrice)}
+            </Text>
+            <Text style={styles.orderDate}>Date: {order.createdAt}</Text>
+          </TouchableOpacity>
+        ))}
+      {/* Modal chi tiết order */}
+      <Modal
+        visible={orderDetailVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeOrderDetail}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.3)"
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 12,
+              padding: 24,
+              width: "85%"
+            }}
+          >
+            {selectedOrder && (
+              <>
+                <Text
+                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
+                >
+                  Order #{selectedOrder.orderNumber}
+                </Text>
+                <Text>
+                  Customer:{" "}
+                  {typeof selectedOrder.user === "string"
+                    ? selectedOrder.user
+                    : selectedOrder.user.fullName}
+                </Text>
+                <Text>Total: {formatCurrency(selectedOrder.totalPrice)}</Text>
+                <Text>Date: {selectedOrder.createdAt}</Text>
+                <Text>Status:</Text>
+                <Picker
+                  selectedValue={orderStatusDraft}
+                  onValueChange={setOrderStatusDraft}
+                  style={{ marginVertical: 8 }}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Processing" value="processing" />
+                  <Picker.Item label="Delivered" value="delivered" />
+                  <Picker.Item label="Cancelled" value="cancelled" />
+                </Picker>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginTop: 16
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={closeOrderDetail}
+                    style={{
+                      flex: 1,
+                      marginRight: 8,
+                      backgroundColor: "#e5e7eb",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text style={{ color: "#374151", fontWeight: "600" }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleChangeOrderStatus}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "#3b82f6",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center"
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>
+                      Save
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
-          <Text style={styles.orderUser}>
-            Customer:{" "}
-            {typeof order.user === "string" ? order.user : order.user.fullName}
-          </Text>
-          <Text style={styles.orderPrice}>
-            Total: {formatCurrency(order.totalPrice)}
-          </Text>
-          <Text style={styles.orderDate}>Date: {order.createdAt}</Text>
         </View>
-      ))}
+      </Modal>
     </ScrollView>
   );
 
@@ -1159,7 +1426,7 @@ const AdminDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff"
   },
   header: {
     backgroundColor: "#2d3748",
@@ -1172,23 +1439,23 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 4
   },
   headerLeft: {
-    flex: 1,
+    flex: 1
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4,
+    marginBottom: 4
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#d1d5db",
+    color: "#d1d5db"
   },
   logoutButton: {
-    padding: 8,
+    padding: 8
   },
   tabsContainer: {
     backgroundColor: "#ffffff",
@@ -1196,7 +1463,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-    maxHeight: 60,
+    maxHeight: 60
   },
   tabButton: {
     flexDirection: "row",
@@ -1206,36 +1473,36 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 20,
     backgroundColor: "#f3f4f6",
-    minWidth: 100,
+    minWidth: 100
   },
   activeTabButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#3b82f6"
   },
   tabText: {
     marginLeft: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b7280",
+    color: "#6b7280"
   },
   activeTabText: {
-    color: "#ffffff",
+    color: "#ffffff"
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 16
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6b7280",
+    color: "#6b7280"
   },
   statsGrid: {
-    marginBottom: 24,
+    marginBottom: 24
   },
   statsCard: {
     backgroundColor: "#ffffff",
@@ -1247,46 +1514,46 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   statsCardContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center"
   },
   statsCardLeft: {
-    flex: 1,
+    flex: 1
   },
   statsTitle: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 4
   },
   statsValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#1f2937"
   },
   statsIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
-    alignItems: "center",
+    alignItems: "center"
   },
   quickActions: {
-    marginBottom: 24,
+    marginBottom: 24
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginBottom: 16,
+    marginBottom: 16
   },
   actionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   actionButton: {
     backgroundColor: "#ffffff",
@@ -1298,13 +1565,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   actionText: {
     marginTop: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#1f2937"
   },
   searchContainer: {
     position: "relative",
@@ -1317,19 +1584,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: "#000000", // Black text color
-    paddingRight: 40, // Make space for clear button
+    paddingRight: 40 // Make space for clear button
   },
   clearButton: {
     position: "absolute",
     right: 12,
     top: 12,
-    padding: 8,
+    padding: 8
   },
   userCard: {
     backgroundColor: "#ffffff",
@@ -1342,7 +1609,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   userAvatar: {
     width: 50,
@@ -1351,45 +1618,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b82f6",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginRight: 16
   },
   userInitial: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: "#ffffff"
   },
   userInfo: {
-    flex: 1,
+    flex: 1
   },
   userName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4,
+    marginBottom: 4
   },
   userEmail: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 2,
+    marginBottom: 2
   },
   userRole: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#9ca3af"
   },
   userStatus: {
-    marginLeft: 16,
+    marginLeft: 16
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginBottom: 12,
+    marginBottom: 12
   },
   statusText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#ffffff",
-    textTransform: "uppercase",
+    textTransform: "uppercase"
   },
   productCard: {
     backgroundColor: "#ffffff",
@@ -1402,40 +1669,40 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   productImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 16,
+    marginRight: 16
   },
   productInfo: {
-    flex: 1,
+    flex: 1
   },
   productName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4,
+    marginBottom: 4
   },
   productPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 2,
+    marginBottom: 2
   },
   productStock: {
     fontSize: 12,
     color: "#6b7280",
-    marginBottom: 2,
+    marginBottom: 2
   },
   productCategory: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#9ca3af"
   },
   productStatus: {
-    marginLeft: 16,
+    marginLeft: 16
   },
   orderCard: {
     backgroundColor: "#ffffff",
@@ -1446,48 +1713,48 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 12
   },
   orderNumber: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937",
+    color: "#1f2937"
   },
   orderUser: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 4
   },
   orderPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 4,
+    marginBottom: 4
   },
   orderDate: {
     fontSize: 12,
-    color: "#9ca3af",
+    color: "#9ca3af"
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff"
   },
   contentContainer: {
     padding: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff"
   },
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 24,
-    paddingHorizontal: 4,
+    paddingHorizontal: 4
   },
   statCard: {
     backgroundColor: "#f8f9fa",
@@ -1502,32 +1769,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: "#e9ecef"
   },
   statNumber: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginTop: 10,
+    marginTop: 10
   },
   statLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginTop: 4,
+    marginTop: 4
   },
   quickActionsContainer: {
-    marginBottom: 24,
+    marginBottom: 24
   },
   actionsGrid: {
-    gap: 12,
+    gap: 12
   },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 12
   },
   recentOrdersContainer: {
-    marginBottom: 24,
+    marginBottom: 24
   },
   recentOrderCard: {
     backgroundColor: "#ffffff",
@@ -1538,7 +1805,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   viewAllButton: {
     flexDirection: "row",
@@ -1547,21 +1814,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#f3f4f6"
   },
   viewAllText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1f2937",
-    marginRight: 8,
+    marginRight: 8
   },
   revenueAnalyticsContainer: {
-    marginBottom: 24,
+    marginBottom: 24
   },
   revenueGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "space-between"
   },
   revenueCard: {
     backgroundColor: "#ffffff",
@@ -1574,39 +1841,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 3
   },
   revenueLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 8,
+    marginBottom: 8
   },
   revenueValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#1f2937"
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 40
   },
   emptyStateText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#95a5a6",
+    color: "#95a5a6"
   },
   // Additional styles for new components
   sectionContainer: {
     display: "flex",
     flex: 1,
     backgroundColor: "#ffffff",
-    padding: 16,
+    padding: 16
   },
   sectionHeader: {
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 20
   },
   addButton: {
     backgroundColor: "#1a1a1a",
@@ -1614,38 +1881,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 8
   },
   addButtonText: {
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
-    marginLeft: 8,
+    marginLeft: 8
   },
   productDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20,
+    lineHeight: 20
   },
   productMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 8
   },
   productActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12,
+    marginLeft: 12
   },
   actionIconButton: {
     backgroundColor: "#f8f9fa",
     padding: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: "#e9ecef"
   },
   categoryCard: {
     backgroundColor: "#ffffff",
@@ -1660,82 +1927,82 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef",
+    borderColor: "#e9ecef"
   },
   categoryImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
     marginRight: 16,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#f3f4f6"
   },
   categoryInfo: {
-    flex: 1,
+    flex: 1
   },
   categoryName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4,
+    marginBottom: 4
   },
   categoryDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20,
+    lineHeight: 20
   },
   categoryMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "center"
   },
   categoryProductCount: {
     fontSize: 14,
     color: "#6c757d",
-    fontWeight: "500",
+    fontWeight: "500"
   },
   categoryActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12,
+    marginLeft: 12
   },
   userPhone: {
     fontSize: 14,
     color: "#6c757d",
-    marginBottom: 4,
+    marginBottom: 4
   },
   userMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 8
   },
   userRoleBadge: {
     backgroundColor: "#e9ecef",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 12
   },
   userRoleText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#495057",
-    textTransform: "capitalize",
+    textTransform: "capitalize"
   },
   userActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12,
+    marginLeft: 12
   },
   listContainer: {
-    paddingBottom: 20,
+    paddingBottom: 20
   },
   orderTotal: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#10b981",
-  },
+    color: "#10b981"
+  }
 });
 
 export default AdminDashboard;
