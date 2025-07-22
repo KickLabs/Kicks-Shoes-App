@@ -14,6 +14,7 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -72,9 +73,9 @@ interface Category {
   id: string;
   name: string;
   description: string;
-  image?: string;
+  image?: string; // Already optional
   productCount: number;
-  isActive: boolean;
+  status: boolean; // Đổi từ isActive sang status
 }
 
 const AdminDashboard: React.FC = () => {
@@ -98,6 +99,17 @@ const AdminDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  
+  // Move category management state to component level
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    description: "",
+  });
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadUserInfo();
@@ -335,11 +347,8 @@ const AdminDashboard: React.FC = () => {
         id: category._id,
         name: category.name || "Unknown Category",
         description: category.description || "",
-        productCount: category.productCount || 0,
-        isActive: category.isActive,
-        image:
-          category.image ||
-          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`,
+        productCount: category.productsCount || category.productCount || 0,
+        status: category.status || false,
       }));
 
       setCategories(mappedCategories);
@@ -776,17 +785,277 @@ const AdminDashboard: React.FC = () => {
     </ScrollView>
   );
 
-  const renderCategories = () => {
-    console.log(
-      "[AdminDashboard] Rendering categories, count:",
-      categories.length
-    );
+  // Category management functions
+  const handleCreateCategory = async () => {
+    if (!newCategory.name || !newCategory.description) {
+      Alert.alert("Error", "Name and description are required");
+      return;
+    }
 
-    return (
+    setIsSubmitting(true);
+    try {
+      await adminService.createCategory({
+        name: newCategory.name,
+        description: newCategory.description,
+      });
+      
+      setIsModalVisible(false);
+      setNewCategory({ name: "", description: "" });
+      Alert.alert("Success", "Category created successfully");
+      loadCategories(); // Refresh the list
+    } catch (error: any) {
+      console.error("[AdminDashboard] Error creating category:", error);
+      Alert.alert("Error", error.message || "Failed to create category");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingCategory || !editingCategory.id) {
+      return;
+    }
+
+    if (!editingCategory.name || !editingCategory.description) {
+      Alert.alert("Error", "Name and description are required");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      console.log("[AdminDashboard] Updating category with data:", {
+        id: editingCategory.id,
+        name: editingCategory.name,
+        description: editingCategory.description,
+        status: editingCategory.status
+      });
+
+      // Cập nhật tất cả thông tin, bao gồm cả trạng thái
+      const result = await adminService.updateCategory(editingCategory.id, {
+        name: editingCategory.name,
+        description: editingCategory.description,
+        status: editingCategory.status
+      });
+      
+      console.log("[AdminDashboard] Update result:", result);
+      
+      setIsModalVisible(false);
+      setEditingCategory(null);
+      Alert.alert("Success", "Category updated successfully");
+      loadCategories(); // Refresh the list
+    } catch (error: any) {
+      console.error("[AdminDashboard] Error updating category:", error);
+      Alert.alert("Error", error.message || "Failed to update category");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!selectedCategoryId) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await adminService.deleteCategory(selectedCategoryId);
+      
+      setIsDeleteModalVisible(false);
+      setSelectedCategoryId(null);
+      Alert.alert("Success", "Category deleted successfully");
+      loadCategories(); // Refresh the list
+    } catch (error: any) {
+      console.error("[AdminDashboard] Error deleting category:", error);
+      Alert.alert("Error", error.message || "Failed to delete category");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleCategoryStatus = async (categoryId: string, currentStatus: boolean) => {
+    try {
+      console.log("[AdminDashboard] Toggle status called with:", {
+        categoryId,
+        currentStatus: currentStatus,
+        willChangeTo: !currentStatus
+      });
+      
+      // Nếu currentStatus = true, chúng ta muốn vô hiệu hóa (shouldActivate = false)
+      // Nếu currentStatus = false, chúng ta muốn kích hoạt (shouldActivate = true)
+      await adminService.toggleCategoryStatus(categoryId, !currentStatus);
+      Alert.alert("Success", `Category ${!currentStatus ? "activated" : "deactivated"} successfully`);
+      loadCategories(); // Refresh the list
+    } catch (error: any) {
+      console.error("[AdminDashboard] Error toggling category status:", error);
+      Alert.alert("Error", error.message || "Failed to update category status");
+    }
+  };
+
+  const renderCategoryModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isModalVisible}
+      onRequestClose={() => {
+        setIsModalVisible(false);
+        setEditingCategory(null);
+        setNewCategory({ name: "", description: "" });
+      }}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>
+            {editingCategory ? "Edit Category" : "Create New Category"}
+          </Text>
+          
+          <Text style={styles.inputLabel}>Name</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Category name"
+            value={editingCategory ? editingCategory.name : newCategory.name}
+            onChangeText={(text) => 
+              editingCategory 
+                ? setEditingCategory({...editingCategory, name: text})
+                : setNewCategory({...newCategory, name: text})
+            }
+          />
+          
+          <Text style={styles.inputLabel}>Description</Text>
+          <TextInput
+            style={[styles.textInput, styles.textAreaInput]}
+            placeholder="Category description"
+            multiline={true}
+            numberOfLines={4}
+            value={editingCategory ? editingCategory.description : newCategory.description}
+            onChangeText={(text) => 
+              editingCategory 
+                ? setEditingCategory({...editingCategory, description: text})
+                : setNewCategory({...newCategory, description: text})
+            }
+          />
+          
+          {editingCategory && (
+            <View style={styles.statusToggleContainer}>
+              <Text style={styles.inputLabel}>Status</Text>
+              <View style={styles.statusToggleRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.statusToggleButton,
+                    editingCategory.status && styles.statusToggleActive,
+                  ]}
+                  onPress={() => setEditingCategory({...editingCategory, status: true})}
+                >
+                  <Text style={[
+                    styles.statusToggleText,
+                    editingCategory.status && styles.statusToggleActiveText,
+                  ]}>Active</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.statusToggleButton,
+                    !editingCategory.status && styles.statusToggleInactive,
+                  ]}
+                  onPress={() => setEditingCategory({...editingCategory, status: false})}
+                >
+                  <Text style={[
+                    styles.statusToggleText,
+                    !editingCategory.status && styles.statusToggleInactiveText,
+                  ]}>Inactive</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => {
+                setIsModalVisible(false);
+                setEditingCategory(null);
+                setNewCategory({ name: "", description: "" });
+              }}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.modalButton, styles.saveButton]}
+              onPress={editingCategory ? handleUpdateCategory : handleCreateCategory}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {editingCategory ? "Update" : "Create"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderDeleteModal = () => (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isDeleteModalVisible}
+      onRequestClose={() => {
+        setIsDeleteModalVisible(false);
+        setSelectedCategoryId(null);
+      }}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Confirm Delete</Text>
+          <Text style={styles.modalText}>
+            Are you sure you want to delete this category? This action cannot be undone.
+          </Text>
+          
+          <View style={styles.modalActions}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.cancelButton]}
+              onPress={() => {
+                setIsDeleteModalVisible(false);
+                setSelectedCategoryId(null);
+              }}
+              disabled={isSubmitting}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.modalButton, styles.deleteButton]}
+              onPress={handleDeleteCategory}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.buttonText}>Delete</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const renderCategories = () => (
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Categories Management</Text>
-          <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => {
+            setEditingCategory(null);
+            setNewCategory({ name: "", description: "" });
+            setIsModalVisible(true);
+          }}
+        >
             <Ionicons name="add" size={20} color="#fff" />
             <Text style={styles.addButtonText}>Add Category</Text>
           </TouchableOpacity>
@@ -824,12 +1093,6 @@ const AdminDashboard: React.FC = () => {
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <View style={styles.categoryCard}>
-                <Image
-                  source={{
-                    uri: item.image || "https://via.placeholder.com/80x80",
-                  }}
-                  style={styles.categoryImage}
-                />
                 <View style={styles.categoryInfo}>
                   <Text style={styles.categoryName}>{item.name}</Text>
                   <Text style={styles.categoryDescription} numberOfLines={2}>
@@ -839,27 +1102,43 @@ const AdminDashboard: React.FC = () => {
                     <Text style={styles.categoryProductCount}>
                       {item.productCount} products
                     </Text>
+                  <TouchableOpacity
+                    onPress={() => handleToggleCategoryStatus(item.id, item.status)}
+                  >
                     <View
                       style={[
                         styles.statusBadge,
                         {
-                          backgroundColor: item.isActive
+                          backgroundColor: item.status
                             ? "#27ae60"
                             : "#6c757d",
                         },
                       ]}
                     >
                       <Text style={styles.statusText}>
-                        {item.isActive ? "Active" : "Inactive"}
+                        {item.status ? "Active" : "Inactive"}
                       </Text>
                     </View>
+                  </TouchableOpacity>
                   </View>
                 </View>
                 <View style={styles.categoryActions}>
-                  <TouchableOpacity style={styles.actionIconButton}>
+                <TouchableOpacity 
+                  style={styles.actionIconButton}
+                  onPress={() => {
+                    setEditingCategory(item);
+                    setIsModalVisible(true);
+                  }}
+                >
                     <Ionicons name="create" size={20} color="#1a1a1a" />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionIconButton}>
+                <TouchableOpacity 
+                  style={styles.actionIconButton}
+                  onPress={() => {
+                    setSelectedCategoryId(item.id);
+                    setIsDeleteModalVisible(true);
+                  }}
+                >
                     <Ionicons name="trash" size={20} color="#dc3545" />
                   </TouchableOpacity>
                 </View>
@@ -872,9 +1151,11 @@ const AdminDashboard: React.FC = () => {
             }
           />
         )}
+
+      {renderCategoryModal()}
+      {renderDeleteModal()}
       </View>
     );
-  };
 
   const renderUsers = () => (
     <ScrollView
@@ -1671,6 +1952,7 @@ const styles = StyleSheet.create({
   },
   categoryInfo: {
     flex: 1,
+    paddingVertical: 4,
   },
   categoryName: {
     fontSize: 16,
@@ -1735,6 +2017,116 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#10b981",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 500,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    color: '#1f2937',
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#4b5563',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4b5563',
+    marginBottom: 8,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: '#f9fafb',
+    marginBottom: 16,
+  },
+  textAreaInput: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    minWidth: 100,
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+  cancelButton: {
+    backgroundColor: '#6b7280',
+  },
+  saveButton: {
+    backgroundColor: '#3b82f6',
+  },
+  deleteButton: {
+    backgroundColor: '#dc2626',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  statusToggleContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  statusToggleRow: {
+    flexDirection: 'row',
+    backgroundColor: '#e9ecef',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  statusToggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  statusToggleActive: {
+    backgroundColor: '#27ae60',
+  },
+  statusToggleInactive: {
+    backgroundColor: '#dc3545',
+  },
+  statusToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  statusToggleActiveText: {
+    color: '#ffffff',
+  },
+  statusToggleInactiveText: {
+    color: '#ffffff',
   },
 });
 
