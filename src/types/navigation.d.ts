@@ -23,6 +23,14 @@ export type RootStackParamList = {
   MainTabs: undefined;
   ListingScreen: undefined;
   SearchScreen: undefined;
+  RedeemPoints: undefined;
+  PaymentResult: {
+    success: boolean;
+    message: string;
+    orderId?: string;
+    amount?: string;
+  };
+  AdminDashboard: undefined;
 };
 
 export type OrderStatus =

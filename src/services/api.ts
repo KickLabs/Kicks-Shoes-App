@@ -31,11 +31,13 @@ class ApiService {
           token !== "null" &&
           token !== "undefined"
         ) {
-          config.headers = config.headers || {};
+          if (!config.headers) {
+            config.headers = {} as import("axios").AxiosRequestHeaders;
+          }
           config.headers.Authorization = String("Bearer " + token);
         }
         console.log(
-          "TOKEN GỬI:",
+          "TOKEN SENT:",
           token,
           "| HEADER:",
           config.headers.Authorization,

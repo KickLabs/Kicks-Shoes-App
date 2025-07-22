@@ -8,7 +8,8 @@ const Header = () => {
   const navigation = useNavigation();
 
   const handleLogoPress = () => {
-    navigation.navigate("Home" as never);
+    // @ts-ignore
+    navigation.navigate("Home", { screen: "HomeMain" });
   };
 
   return (
@@ -20,13 +21,16 @@ const Header = () => {
             style={styles.logoContainer}
           >
             <Image
-              source={require("assets/images/logo-header.png")}
+              source={require("../../../assets/images/logo-header.png")}
               style={styles.logo}
             />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.searchIcon}
-            onPress={() => navigation.navigate("SearchScreen")}
+            onPress={() => {
+              // @ts-ignore
+              navigation.navigate("Home", { screen: "SearchScreen" });
+            }}
           >
             <Ionicons name="search" size={28} color="#232321" />
           </TouchableOpacity>

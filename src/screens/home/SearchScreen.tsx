@@ -81,26 +81,43 @@ const SearchScreen: React.FC = () => {
             <Text style={styles.noResult}>No products found.</Text>
           ) : (
             <View style={styles.productsWrap}>
-              {filteredProducts.map((p) => (
-                <ProductCard
-                  key={String(p.id)}
-                  image={{
-                    uri: String(
-                      p.mainImage || p.inventory?.[0]?.images?.[0] || ""
-                    ),
-                  }}
-                  name={String(p.name || "")}
-                  price={formatVND(
-                    p.discountedPrice || p.price?.regular || p.price
-                  )}
-                  tag={p.isNew ? "New" : p.discountedPrice ? "Sale" : undefined}
-                  onPress={() =>
-                    navigation.navigate("ProductDetails", {
-                      productId: String(p.id),
-                    })
-                  }
-                />
-              ))}
+              {filteredProducts.map((p) => {
+                // Tính toán tag hiển thị
+                let tag = undefined;
+                if (p.isNew) {
+                  tag = "New";
+                } else if (
+                  typeof p.price === "object" &&
+                  p.price.isOnSale &&
+                  p.price.discountPercent
+                ) {
+                  tag = `${p.price.discountPercent}% off`;
+                }
+
+                return (
+                  <ProductCard
+                    key={String(p.id)}
+                    image={{
+                      uri: String(
+                        p.mainImage || p.inventory?.[0]?.images?.[0] || ""
+                      ),
+                    }}
+                    name={String(p.name || "")}
+                    price={formatVND(
+                      p.discountedPrice ||
+                        (typeof p.price === "object"
+                          ? p.price.regular
+                          : p.price)
+                    )}
+                    tag={tag}
+                    onPress={() =>
+                      navigation.navigate("ProductDetails", {
+                        productId: String(p.id),
+                      })
+                    }
+                  />
+                );
+              })}
             </View>
           )}
         </ScrollView>

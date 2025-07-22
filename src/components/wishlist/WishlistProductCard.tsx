@@ -7,6 +7,7 @@ interface WishlistProductCardProps {
   image: string;
   name: string;
   price: number;
+  originalPrice?: number;
   isNew?: boolean;
   isOnSale?: boolean;
   discountPercent?: number;
@@ -19,6 +20,7 @@ const WishlistProductCard: React.FC<WishlistProductCardProps> = ({
   image,
   name,
   price,
+  originalPrice,
   isNew,
   isOnSale,
   discountPercent,
@@ -26,6 +28,19 @@ const WishlistProductCard: React.FC<WishlistProductCardProps> = ({
   onRemove,
   onAddToCart,
 }) => {
+  // Calculate the final price to display
+  const finalPrice =
+    isOnSale && originalPrice && discountPercent
+      ? originalPrice * (1 - discountPercent / 100)
+      : price;
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.imageBox} onPress={onPress}>
@@ -34,7 +49,7 @@ const WishlistProductCard: React.FC<WishlistProductCardProps> = ({
             style={[styles.tag, isNew ? styles.tagNew : styles.tagDiscount]}
           >
             <Text style={styles.tagText}>
-              {isNew ? "NEW" : isOnSale ? `-${discountPercent}%` : ""}
+              {isNew ? "New" : isOnSale ? `${discountPercent}% off` : ""}
             </Text>
           </View>
         )}
@@ -55,7 +70,8 @@ const WishlistProductCard: React.FC<WishlistProductCardProps> = ({
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.button} onPress={onAddToCart}>
           <Text style={styles.buttonText}>
-            ADD TO CART<Text style={styles.price}> - ${Math.round(price)}</Text>
+            ADD TO CART
+            <Text style={styles.price}> - {formatPrice(finalPrice)}</Text>
           </Text>
         </TouchableOpacity>
       </View>
@@ -68,15 +84,14 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 0,
     alignItems: "center",
-    marginBottom: 10,
-    marginRight: 0,
-    marginLeft: 0,
+    marginBottom: 16,
+    marginHorizontal: 4,
     width: "48%",
-    minWidth: 150,
+    flex: 1,
     maxWidth: 200,
   },
   imageBox: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
     borderRadius: 14,
     marginTop: 14,
     marginBottom: 0,
@@ -115,8 +130,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   image: {
-    width: 220,
-    height: 220,
+    width: "90%",
+    height: "90%",
     resizeMode: "contain",
   },
   topRow: {

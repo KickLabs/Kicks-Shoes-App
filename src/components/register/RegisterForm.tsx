@@ -12,6 +12,7 @@ import CustomCheckbox from "../../components/login/CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import authService from "@/services/auth";
 import { useNavigation } from "@react-navigation/native";
+import Toast from "react-native-root-toast";
 
 interface RegisterFormProps {
   onRegister: (name: string, email: string, password: string) => void;
@@ -133,16 +134,16 @@ const RegisterForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation();
 
-  const handleRegister = async (
-    name: string,
-    email: string,
-    password: string
-  ) => {
+  const handleRegister = async (formData: any) => {
     setLoading(true);
     setError(null);
     try {
-      await authService.register(name, email, password);
+      await authService.register(formData);
       setLoading(false);
+      Toast.show(
+        "Registration successful! Please check your email to verify your account.",
+        { duration: Toast.durations.LONG }
+      );
       navigation.navigate("Login" as never);
     } catch (err: any) {
       setLoading(false);
@@ -152,14 +153,30 @@ const RegisterForm: React.FC = () => {
 
   return (
     <Formik
-      initialValues={{ firstName: "", lastName: "", email: "", password: "" }}
+      initialValues={{
+        firstName: "",
+        lastName: "",
+        username: "",
+        phone: "",
+        address: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }}
       onSubmit={(values) => {
         if (!agree) return;
-        handleRegister(
-          values.firstName + " " + values.lastName,
-          values.email,
-          values.password
-        );
+        if (values.password !== values.confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+        handleRegister({
+          fullName: values.firstName + " " + values.lastName,
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          phone: values.phone,
+          address: values.address,
+        });
       }}
     >
       {({ handleChange, handleBlur, handleSubmit, values, errors }) => (
@@ -203,6 +220,35 @@ const RegisterForm: React.FC = () => {
             autoCapitalize="words"
           />
 
+          <Text style={styles.label}>Username</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={values.username}
+            onChangeText={handleChange("username")}
+            onBlur={handleBlur("username")}
+            autoCapitalize="none"
+          />
+
+          <Text style={styles.label}>Phone Number</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Phone Number"
+            value={values.phone}
+            onChangeText={handleChange("phone")}
+            onBlur={handleBlur("phone")}
+            keyboardType="phone-pad"
+          />
+
+          <Text style={styles.label}>Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Address"
+            value={values.address}
+            onChangeText={handleChange("address")}
+            onBlur={handleBlur("address")}
+          />
+
           <Text style={styles.label}>Gender</Text>
           <View style={styles.genderRow}>
             {["Male", "Female", "Other"].map((g) => (
@@ -236,6 +282,14 @@ const RegisterForm: React.FC = () => {
             value={values.password}
             onChangeText={handleChange("password")}
             onBlur={handleBlur("password")}
+            secureTextEntry
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={values.confirmPassword}
+            onChangeText={handleChange("confirmPassword")}
+            onBlur={handleBlur("confirmPassword")}
             secureTextEntry
           />
           <Text style={styles.passwordDesc}>

@@ -156,7 +156,8 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await orderService.getOrders();
+        // Fetch orders with higher limit to get all orders
+        const data = await orderService.getOrders(1, 100);
         console.log("Orders data received:", data);
 
         // Handle different response structures
@@ -171,6 +172,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
         }
 
         console.log("Processed orders array:", ordersArray);
+        console.log("Total orders fetched:", ordersArray.length);
         console.log("First order sample:", ordersArray[0]);
         if (ordersArray[0]?.items?.[0]) {
           console.log("First item sample:", ordersArray[0].items[0]);
@@ -247,7 +249,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
                 // Re-fetch orders
                 const fetchOrders = async () => {
                   try {
-                    const data = await orderService.getOrders();
+                    const data = await orderService.getOrders(1, 100);
                     console.log("Orders data received:", data);
 
                     let ordersArray = [];
@@ -262,6 +264,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
                         : dataObj.orders || [];
                     }
 
+                    console.log("Total orders fetched:", ordersArray.length);
                     setOrders(ordersArray);
                   } catch (err: any) {
                     console.error("Error fetching orders:", err);
@@ -309,8 +312,8 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
   const handleCancelOrder = async (orderId: string) => {
     try {
       await orderService.cancelOrder(orderId, "User requested cancellation");
-      // Refresh orders after cancellation
-      const data = await orderService.getOrders();
+      // Refresh orders after cancellation with higher limit
+      const data = await orderService.getOrders(1, 100);
       let ordersArray = [];
       if (Array.isArray(data)) {
         ordersArray = data;
@@ -320,6 +323,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
         const dataObj = (data as any).data;
         ordersArray = Array.isArray(dataObj) ? dataObj : dataObj.orders || [];
       }
+      console.log("Orders refreshed after cancel:", ordersArray.length);
       setOrders(ordersArray);
     } catch (error) {
       console.error("Error cancelling order:", error);

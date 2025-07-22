@@ -15,15 +15,17 @@ import { Ionicons } from "@expo/vector-icons";
 import Header from "../../components/layout/Header";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../types/navigation";
+import { RootStackParamList } from "../../types/navigation.d";
 import ProductCard from "../../components/common/ProductCard";
 import api from "../../services/api";
 import { API_ENDPOINTS } from "../../constants/api";
+import { API_BASE_URL } from "../../constants/config";
 import { formatVND } from "../../utils/currency";
+import cartService from "../../services/cart";
+import { wishlistService } from "../../services/wishlist";
 
 const ProductDetailsScreen = () => {
-  const route =
-    useRoute<RouteProp<{ params: { productId: string } }, "params">>();
+  const route = useRoute<RouteProp<RootStackParamList, "ProductDetails">>();
   const productId = route.params?.productId;
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
@@ -36,15 +38,23 @@ const ProductDetailsScreen = () => {
   const [imageIndex, setImageIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [addingToWishlist, setAddingToWishlist] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
+      if (!productId) {
+        setError("Product ID is missing");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const res = await api.get(
           `${API_ENDPOINTS.PRODUCT_DETAILS(productId)}`
         );
-        const prod = res.data.data || res.data;
+        const prod = (res.data as any).data || (res.data as any);
         setProduct(prod);
         setSelectedColor(
           prod.variants?.colors?.[0] || prod.inventory?.[0]?.color || ""
@@ -53,6 +63,9 @@ const ProductDetailsScreen = () => {
           prod.variants?.sizes?.[0] || prod.inventory?.[0]?.size || ""
         );
         setSelectedImage(prod.inventory?.[0]?.images?.[0] || "");
+
+        // Check if product is in wishlist
+        checkWishlistStatus();
       } catch (err: any) {
         setError(err.message || "Lỗi tải sản phẩm");
       } finally {
@@ -62,11 +75,28 @@ const ProductDetailsScreen = () => {
     fetchProduct();
   }, [productId]);
 
+  const checkWishlistStatus = async () => {
+    try {
+      const wishlistItems = await wishlistService.getWishlist();
+      const isInWishlist = wishlistItems.some(
+        (item: any) =>
+          item.product?.id === productId || item.product?._id === productId
+      );
+      setFavourite(isInWishlist);
+    } catch (error) {
+      // Silently fail - wishlist status is not critical
+      console.log("Error checking wishlist status:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchRecommendations = async () => {
+      if (!productId) return;
+
       try {
         const res = await api.get(API_ENDPOINTS.PRODUCTS);
-        const all = res.data.data?.products || res.data.products || [];
+        const all =
+          (res.data as any).data?.products || (res.data as any).products || [];
         setRecommendations(
           all
             .filter(
@@ -74,10 +104,20 @@ const ProductDetailsScreen = () => {
             )
             .slice(0, 4)
         );
-      } catch {}
+      } catch (error) {
+        console.error("Error fetching recommendations:", error);
+      }
     };
     fetchRecommendations();
   }, [productId]);
+
+  if (!productId) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: "red" }}>Product ID is missing</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (
@@ -97,14 +137,15 @@ const ProductDetailsScreen = () => {
   }
 
   const images =
-    product.inventory.find((item: any) => item.color === selectedColor)
+    product?.inventory?.find((item: any) => item.color === selectedColor)
       ?.images ||
-    product.inventory?.[0]?.images ||
+    product?.inventory?.[0]?.images ||
     [];
 
-  const unavailableSizes = product.inventory
-    .filter((item: any) => !item.isAvailable || item.quantity === 0)
-    .map((item: any) => item.size.toString());
+  const unavailableSizes =
+    product?.inventory
+      ?.filter((item: any) => !item.isAvailable || item.quantity === 0)
+      ?.map((item: any) => item.size.toString()) || [];
 
   const getPrice = () => {
     return {
@@ -117,8 +158,13 @@ const ProductDetailsScreen = () => {
     };
   };
 
-  const handleAddToCart = () => {
-    const selectedVariant = product.inventory.find(
+  const handleAddToCart = async () => {
+    if (!selectedSize || !selectedColor) {
+      Alert.alert("Lỗi", "Vui lòng chọn kích cỡ và màu sắc");
+      return;
+    }
+
+    const selectedVariant = product?.inventory?.find(
       (item: any) => item.size === selectedSize && item.color === selectedColor
     );
 
@@ -127,10 +173,99 @@ const ProductDetailsScreen = () => {
       !selectedVariant.isAvailable ||
       selectedVariant.quantity === 0
     ) {
-      Alert.alert("Error", "Selected variant is not available");
+      Alert.alert("Lỗi", "Sản phẩm không có sẵn với lựa chọn này");
       return;
     }
-    // TODO: Thêm vào giỏ hàng
+
+    try {
+      setAddingToCart(true);
+      const price = getPrice().discounted || getPrice().regular;
+
+      // Get image for selected color
+      const selectedColorImage = images[imageIndex] || selectedImage;
+
+      await cartService.addToCart(
+        productId,
+        1,
+        selectedSize,
+        selectedColor,
+        price,
+        selectedColorImage
+      );
+      Alert.alert("Success", "Add product to cart successfully");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Cannot add to cart");
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!selectedSize || !selectedColor) {
+      Alert.alert("Error", "Please select a size and color");
+      return;
+    }
+
+    const selectedVariant = product?.inventory?.find(
+      (item: any) => item.size === selectedSize && item.color === selectedColor
+    );
+
+    if (
+      !selectedVariant ||
+      !selectedVariant.isAvailable ||
+      selectedVariant.quantity === 0
+    ) {
+      Alert.alert("Error", "Product is not available with this selection");
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      const price = getPrice().discounted || getPrice().regular;
+
+      // Get image for selected color
+      const selectedColorImage = images[imageIndex] || selectedImage;
+
+      await cartService.addToCart(
+        productId,
+        1,
+        selectedSize,
+        selectedColor,
+        price,
+        selectedColorImage
+      );
+      // Navigate to cart screen
+      (navigation as any).navigate("Cart");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Cannot add to cart");
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!productId) {
+      Alert.alert("Error", "Can not find product");
+      return;
+    }
+
+    try {
+      setAddingToWishlist(true);
+
+      if (favourite) {
+        await wishlistService.removeFromWishlist(productId);
+        setFavourite(false);
+        Alert.alert("Success", "Removed from wishlist");
+      } else {
+        await wishlistService.addToWishlist(productId);
+        setFavourite(true);
+        Alert.alert("Success", "Added to wishlist");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Cannot update wishlist status");
+    } finally {
+      setAddingToWishlist(false);
+    }
   };
 
   return (
@@ -157,7 +292,7 @@ const ProductDetailsScreen = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.shareButtonOverlay}
-                onPress={() => Alert.alert("Share", "Chia sẻ sản phẩm!")}
+                onPress={() => Alert.alert("Share", "Share this product!")}
               >
                 <Ionicons
                   name="arrow-redo-outline"
@@ -201,26 +336,34 @@ const ProductDetailsScreen = () => {
             ))}
           </View>
           <View style={styles.detailsContainerNew}>
-            {(product.isNew || (product.tags && product.tags.length > 0)) && (
+            {(product?.isNew ||
+              (product?.tags && product?.tags.length > 0)) && (
               <View style={styles.tagBox}>
                 <Text style={styles.tagText}>
-                  {product.isNew ? "New Release" : product.tags[0]}
+                  {product?.isNew ? "New Release" : product?.tags?.[0]}
                 </Text>
               </View>
             )}
             <Text style={styles.productName}>
-              {(product.name || "").toUpperCase()}
+              {(product?.name || "").toUpperCase()}
             </Text>
-            <Text style={styles.productPrice}>
-              {getPrice().discounted
-                ? formatVND(getPrice().discounted)
-                : formatVND(getPrice().regular)}
-            </Text>
+            <View style={styles.priceContainer}>
+              <Text style={styles.productPrice}>
+                {getPrice().discounted
+                  ? formatVND(getPrice().discounted)
+                  : formatVND(getPrice().regular)}
+              </Text>
+              {getPrice().discounted && (
+                <Text style={styles.originalPrice}>
+                  {formatVND(getPrice().regular)}
+                </Text>
+              )}
+            </View>
             <View style={styles.rowBetween}>
               <Text style={styles.sectionTitleNew}>Color</Text>
             </View>
             <View style={styles.colorContainerNew}>
-              {product.variants.colors.map((color: string) => (
+              {(product?.variants?.colors || []).map((color: string) => (
                 <TouchableOpacity
                   key={color}
                   style={[
@@ -230,7 +373,7 @@ const ProductDetailsScreen = () => {
                   ]}
                   onPress={() => {
                     setSelectedColor(color);
-                    const newVariant = product.inventory.find(
+                    const newVariant = product?.inventory?.find(
                       (item: any) => item.color === color
                     );
                     if (newVariant) {
@@ -248,7 +391,7 @@ const ProductDetailsScreen = () => {
               </TouchableOpacity>
             </View>
             <View style={styles.sizeContainerNew}>
-              {product.variants.sizes.map((size: string) => (
+              {(product?.variants?.sizes || []).map((size: string) => (
                 <TouchableOpacity
                   key={size}
                   style={[
@@ -278,14 +421,24 @@ const ProductDetailsScreen = () => {
             </View>
             <View style={styles.actionRow}>
               <TouchableOpacity
-                style={styles.addToCartButtonNew}
+                style={[
+                  styles.addToCartButtonNew,
+                  addingToCart && styles.disabledButton,
+                ]}
                 onPress={handleAddToCart}
+                disabled={addingToCart}
               >
-                <Text style={styles.addToCartTextNew}>ADD TO CART</Text>
+                <Text style={styles.addToCartTextNew}>
+                  {addingToCart ? "ĐANG THÊM..." : "ADD TO CART"}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.heartButton}
-                onPress={() => setFavourite(!favourite)}
+                style={[
+                  styles.heartButton,
+                  addingToWishlist && styles.disabledButton,
+                ]}
+                onPress={handleToggleWishlist}
+                disabled={addingToWishlist}
               >
                 <Ionicons
                   name={favourite ? "heart" : "heart-outline"}
@@ -294,39 +447,56 @@ const ProductDetailsScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.buyNowButton}>
-              <Text style={styles.buyNowText}>BUY IT NOW</Text>
+            <TouchableOpacity
+              style={[
+                styles.buyNowButton,
+                addingToCart && styles.disabledButton,
+              ]}
+              onPress={handleBuyNow}
+              disabled={addingToCart}
+            >
+              <Text style={styles.buyNowText}>
+                {addingToCart ? "ĐANG XỬ LÝ..." : "BUY IT NOW"}
+              </Text>
             </TouchableOpacity>
             <Text style={[styles.sectionTitleNew, { marginTop: 32 }]}>
               ABOUT THE PRODUCT
             </Text>
-            <Text style={styles.productDesc}>{product.description}</Text>
-            <Text style={[styles.sectionTitleNew, { marginTop: 24 }]}>
-              You May Also Like
-            </Text>
-            <View style={styles.recommendationsGrid}>
-              {recommendations.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  image={{ uri: item.inventory[0]?.images[0] || "" }}
-                  name={item.name || ""}
-                  price={formatVND(
-                    item.discountedPrice || item.price?.regular || item.price
-                  )}
-                  tag={
-                    item.isNew
-                      ? "New"
-                      : item.discountedPrice
-                        ? "Sale"
-                        : undefined
-                  }
-                  onPress={() =>
-                    navigation.navigate("ProductDetails", {
-                      productId: item.id,
-                    })
-                  }
-                />
-              ))}
+            <Text style={styles.productDesc}>{product?.description}</Text>
+
+            {/* You May Also Like Section - styled like HomeScreen */}
+            <View style={styles.mayAlsoLikeSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionHeaderTitle}>You May Also Like</Text>
+                <TouchableOpacity style={styles.seeAllButton}>
+                  <Text style={styles.seeAllButtonText}>SEE ALL</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.recommendationsGrid}>
+                {recommendations.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    image={{ uri: item.inventory[0]?.images[0] || "" }}
+                    name={item.name || ""}
+                    price={formatVND(
+                      item.discountedPrice || item.price?.regular || item.price
+                    )}
+                    tag={
+                      item.isNew
+                        ? "New"
+                        : item.discountedPrice
+                          ? "Sale"
+                          : undefined
+                    }
+                    onPress={() =>
+                      navigation.navigate("ProductDetails", {
+                        productId: item.id,
+                      })
+                    }
+                  />
+                ))}
+              </View>
             </View>
           </View>
         </View>
@@ -413,11 +583,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     textTransform: "uppercase",
   },
+  priceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   productPrice: {
     fontFamily: "Rubik-Bold",
     fontSize: 22,
     color: COLORS.blue,
-    marginBottom: 8,
+    marginRight: 8,
+  },
+  originalPrice: {
+    fontFamily: "Rubik-Medium",
+    fontSize: 18,
+    color: COLORS.gray,
+    textDecorationLine: "line-through",
   },
   productDesc: {
     fontFamily: "Rubik-Regular",
@@ -514,11 +695,40 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   buyNowText: { color: COLORS.white, fontSize: 16, fontFamily: "Rubik-Medium" },
+  mayAlsoLikeSection: {
+    marginTop: 32,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionHeaderTitle: {
+    fontSize: 24,
+    fontFamily: "Rubik-SemiBold",
+    color: COLORS.black,
+  },
+  seeAllButton: {
+    backgroundColor: COLORS.blue,
+    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  seeAllButtonText: {
+    color: COLORS.white,
+    fontFamily: "Rubik-Medium",
+    fontSize: 15,
+    textTransform: "uppercase",
+  },
   recommendationsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: 10,
+    alignItems: "flex-start",
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   topButtonsRow: {
     position: "absolute",
