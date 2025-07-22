@@ -6,7 +6,7 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
-  role: "user" | "admin";
+  role: "customer" | "shop" | "admin";
 }
 
 // Product Types
@@ -14,11 +14,15 @@ export interface Product {
   id: string;
   name: string;
   description: string;
-  price: number | {
-    regular: number;
-    discountPercent: number;
-    isOnSale: boolean;
-  };
+  price:
+    | number
+    | {
+        regular: number;
+        discountPercent: number;
+        isOnSale: boolean;
+      };
+  discountedPrice?: number;
+  isNew?: boolean;
   images?: string[];
   mainImage?: string;
   category: string;
@@ -36,6 +40,10 @@ export interface Product {
     isAvailable?: boolean;
     [key: string]: any;
   }[];
+  variants?: {
+    colors?: string[];
+    sizes?: string[];
+  };
 }
 
 export interface Review {

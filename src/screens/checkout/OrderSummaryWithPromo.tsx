@@ -8,12 +8,14 @@ import {
 } from "react-native";
 import { COLORS } from "../../constants/theme";
 import { formatVND } from "@/utils/currency";
+import { DiscountValidationResult } from "@/services/discount";
 
 interface OrderSummaryWithPromoProps {
   itemCount: number;
   subtotal: number;
   delivery: number;
   total: number;
+  discount?: DiscountValidationResult | null;
 }
 
 const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
@@ -21,6 +23,7 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
   subtotal,
   delivery,
   total,
+  discount,
 }) => {
   const [showPromoInput, setShowPromoInput] = useState(false);
 
@@ -35,6 +38,16 @@ const OrderSummaryWithPromo: React.FC<OrderSummaryWithPromoProps> = ({
         <Text>Delivery</Text>
         <Text>{formatVND(delivery)}</Text>
       </View>
+      {discount && discount.isValid && (
+        <View style={styles.row}>
+          <Text style={styles.discountText}>
+            Discount ({discount.discount.code})
+          </Text>
+          <Text style={styles.discountText}>
+            -{formatVND(discount.discountAmount)}
+          </Text>
+        </View>
+      )}
       <View style={styles.row}>
         <Text style={styles.totalText}>Total</Text>
         <Text style={styles.totalText}>{formatVND(total)}</Text>
@@ -72,6 +85,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
+  },
+  discountText: {
+    color: "#16a34a",
+    fontWeight: "600",
   },
   promoLabel: {
     marginTop: 8,

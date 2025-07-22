@@ -1,32 +1,130 @@
 import apiService from "./api";
 import { API_ENDPOINTS } from "../constants/api";
 import { ApiResponse, Order } from "../types";
+import cartService, { CartItem } from "./cart";
+import { Linking } from "react-native";
 
 export interface CreateOrderPayload {
   address: string;
   phone: string;
   deliveryMethod: string;
+  paymentMethod: "vnpay" | "cod";
   note?: string;
+  discount?: {
+    code: string;
+    discountAmount: number;
+    type: "percentage" | "fixed";
+    value: number;
+  };
+  finalTotal?: number;
 }
 
 class OrderService {
   async createOrder(payload: CreateOrderPayload): Promise<Order> {
     try {
+      // Lấy sản phẩm trong giỏ hàng
+      const cart = await cartService.getCart();
+      const products = cart.items.map((item: CartItem) => ({
+        id: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        size: item.size,
+        color: item.color,
+      }));
+
+      // Map paymentMethod 'cod' thành 'cash_on_delivery' đúng chuẩn backend
+      const paymentMethod =
+        payload.paymentMethod === "cod"
+          ? "cash_on_delivery"
+          : payload.paymentMethod;
+
+      // Tính tổng tiền (bao gồm phí ship nếu có)
+      let deliveryFee = 0;
+      if (payload.deliveryMethod === "standard") deliveryFee = 30000;
+      const subtotalWithDelivery = cart.total + deliveryFee;
+
+      // Apply discount if provided
+      const discountAmount = payload.discount?.discountAmount || 0;
+      const totalAmount =
+        payload.finalTotal || subtotalWithDelivery - discountAmount;
+
+      const orderPayload = {
+        products,
+        shippingAddress: payload.address,
+        phone: payload.phone,
+        shippingMethod: payload.deliveryMethod,
+        paymentMethod,
+        note: payload.note,
+        totalAmount,
+        totalPrice: totalAmount,
+        shippingCost: deliveryFee,
+        tax: 0,
+        discount: discountAmount,
+        discountCode: payload.discount?.code || null,
+      };
+
+      // 1. Tạo order trước
       const response = await apiService.post<Order>(
         API_ENDPOINTS.ORDERS,
-        payload
+        orderPayload
       );
-      return response.data.data;
+      const createdOrder = (response as any).data;
+
+      // 2. Nếu là VNPay, gọi API lấy paymentUrl và mở trình duyệt
+      if (paymentMethod === "vnpay" && createdOrder && createdOrder._id) {
+        // Log trước khi gọi API lấy link thanh toán VNPay
+        console.log("[VNPay] About to call /payment/create", {
+          orderId: createdOrder._id,
+          amount: createdOrder.totalPrice,
+        });
+        try {
+          const paymentRes = await apiService.post<any>("/payment/create", {
+            orderId: createdOrder._id,
+            amount: createdOrder.totalPrice,
+            orderInfo: `Thanh toán đơn hàng #${createdOrder.orderNumber || createdOrder._id}`,
+          });
+          console.log("[VNPay] paymentRes:", paymentRes);
+          const paymentUrl = paymentRes?.data?.paymentUrl;
+          console.log("[VNPay] paymentUrl:", paymentUrl);
+          if (paymentUrl) {
+            Linking.openURL(paymentUrl);
+          } else {
+            console.error(
+              "[VNPay] No paymentUrl found in VNPay response:",
+              paymentRes
+            );
+          }
+        } catch (error) {
+          console.error("[VNPay] Error in /payment/create:", error);
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error
+          ) {
+            // @ts-ignore
+            console.error("[VNPay] Error response:", error.response);
+          }
+        }
+      }
+
+      return createdOrder;
     } catch (error) {
       console.error("Error creating order:", error);
       throw error;
     }
   }
 
-  async getOrders() {
+  async getOrders(page: number = 1, limit: number = 100) {
     try {
-      // Get orders for current user
-      const response = await apiService.get(API_ENDPOINTS.MY_ORDERS);
+      // Get orders for current user with pagination
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      const response = await apiService.get(
+        `${API_ENDPOINTS.MY_ORDERS}?${queryParams}`
+      );
       console.log("Orders response:", response);
 
       // Handle response structure: {success: true, data: {orders: [...], pagination: {...}}}

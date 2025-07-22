@@ -12,6 +12,8 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../types/navigation";
 import { Product } from "../../types";
 import { formatVND } from "../../utils/currency";
+import RoleSwitcher from "../../components/debug/RoleSwitcher";
+import NavigationTest from "../../components/debug/NavigationTest";
 
 const HomeScreen = () => {
   type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -176,8 +178,21 @@ const HomeScreen = () => {
             newProducts.map((p: Product) => {
               // Lấy giá ưu tiên: discountedPrice > price.regular > price
               const originalPrice =
-                p.discountedPrice || p.price?.regular || p.price;
+                p.discountedPrice ||
+                (typeof p.price === "object" ? p.price.regular : p.price);
               const formattedPrice = formatVND(originalPrice);
+
+              // Tính toán tag hiển thị
+              let tag = undefined;
+              if (p.isNew) {
+                tag = "New";
+              } else if (
+                typeof p.price === "object" &&
+                p.price.isOnSale &&
+                p.price.discountPercent
+              ) {
+                tag = `${p.price.discountPercent}% off`;
+              }
 
               return (
                 <ProductCard
@@ -190,7 +205,7 @@ const HomeScreen = () => {
                   }}
                   name={p.name}
                   price={formattedPrice}
-                  tag={p.isNew ? "New" : p.discountedPrice ? "Sale" : undefined}
+                  tag={tag}
                   onPress={() =>
                     navigation.navigate("ProductDetails", { productId: p.id })
                   }
@@ -251,6 +266,12 @@ const HomeScreen = () => {
           ))}
         </View>
       </View>
+
+      {/* Debug: Role Switcher for testing */}
+      <RoleSwitcher />
+
+      {/* Debug: Navigation Test */}
+      <NavigationTest />
     </ScrollView>
   );
 };

@@ -11,7 +11,15 @@ import CustomCheckbox from "./CustomCheckbox";
 import { Ionicons, FontAwesome } from "@expo/vector-icons";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { useDispatch } from "react-redux";
 import authService from "@/services/auth";
+import userService from "@/services/user";
+import {
+  loginStart,
+  loginSuccess,
+  loginFailure,
+} from "@/store/slices/authSlice";
+import Toast from "react-native-root-toast";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -20,28 +28,107 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   const handleRegister = () => {
     navigation.navigate("Register" as never);
   };
 
+  const handleForgotPassword = () => {
+    navigation.navigate("ForgotPassword" as never);
+  };
+
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      await authService.login(email, password);
-      setLoading(false);
-      navigation.navigate("Profile" as never);
+      dispatch(loginStart());
+
+      // Call login service
+      const loginResponse = await authService.login(email, password);
+
+      // Get user profile after successful login
+      const userProfile = await userService.getProfile();
+
+      // Extract token from AsyncStorage (it was saved in authService.login)
+      const AsyncStorage =
+        require("@react-native-async-storage/async-storage").default;
+      const token = await AsyncStorage.getItem("accessToken");
+
+      if (token && userProfile) {
+        // Map user profile to User type
+        console.log("🔍 LoginForm: Raw userProfile:", userProfile);
+        console.log(
+          "🔍 LoginForm: userProfile.role:",
+          (userProfile as any).role
+        );
+
+        const user = {
+          id: (userProfile as any).id || (userProfile as any)._id || "unknown",
+          email: (userProfile as any).email || email, // fallback to login email
+          name:
+            (userProfile as any).name ||
+            (userProfile as any).fullName ||
+            "User",
+          avatar:
+            (userProfile as any).avatar || (userProfile as any).profileImage,
+          role: (userProfile as any).role || ("customer" as const), // Changed default from "user" to "customer"
+        };
+
+        console.log("🔍 LoginForm: Mapped user object:", user);
+
+        // Dispatch success action with user and token
+        dispatch(
+          loginSuccess({
+            user: user,
+            token: token,
+          })
+        );
+
+        console.log("✅ LoginForm: Redux dispatch completed", {
+          user,
+          token: token ? "exists" : "null",
+        });
+
+        // Navigate based on user role
+        console.log("🚀 LoginForm: Navigation after login", {
+          userRole: user.role,
+          canGoBack: navigation.canGoBack(),
+        });
+
+        // Check user role and navigate accordingly
+        if (user.role === "admin" || user.role === "shop") {
+          console.log("🚀 LoginForm: Navigating admin/shop to AdminDashboard");
+          // Small delay to ensure token is fully saved
+          setTimeout(() => {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "AdminDashboard" as never }],
+            });
+          }, 100);
+        } else {
+          console.log("🚀 LoginForm: Navigating customer to Profile");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: "Profile" as never }],
+          });
+        }
+      } else {
+        throw new Error("Login failed - missing token or user data");
+      }
     } catch (err: any) {
-      setLoading(false);
+      dispatch(loginFailure(err?.message || "Login failed"));
       setError(err?.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={handleForgotPassword}>
         <Text style={styles.forgot}>Forgot your password?</Text>
       </TouchableOpacity>
       <TextInput
@@ -59,6 +146,13 @@ const LoginForm = () => {
         onChangeText={setPassword}
         secureTextEntry
       />
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
       <View style={styles.checkboxRow}>
         <CustomCheckbox value={keepLoggedIn} onValueChange={setKeepLoggedIn} />
         <Text style={styles.checkboxText}>
@@ -86,11 +180,7 @@ const LoginForm = () => {
           style={{ marginLeft: 8 }}
         />
       </TouchableOpacity>
-      {error && (
-        <Text style={{ color: "red", textAlign: "center", marginBottom: 8 }}>
-          {error}
-        </Text>
-      )}
+
       <View style={styles.socialRow}>
         <TouchableOpacity style={styles.socialBtn}>
           <Image
@@ -108,6 +198,7 @@ const LoginForm = () => {
           />
         </TouchableOpacity>
       </View>
+
       <View style={styles.registerRow}>
         <Text style={styles.registerText}>Don't have an account? </Text>
         <TouchableOpacity onPress={handleRegister}>
@@ -208,6 +299,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#222",
     marginTop: 8,
+  },
+  errorContainer: {
+    backgroundColor: "#ffebee",
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: "#f44336",
+  },
+  errorText: {
+    color: "#d32f2f",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 

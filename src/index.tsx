@@ -1,14 +1,27 @@
+// Import gesture handler first
+import "react-native-gesture-handler";
+
 import { registerRootComponent } from "expo";
 import { Provider } from "react-redux";
 import { store } from "./store";
 import AppNavigator from "./navigation/AppNavigator";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, StyleSheet, Text as RNText, TextProps } from "react-native";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import autoIPService from "./services/autoIP";
+import authPersistenceService from "./services/authPersistence";
+import { DiscountProvider } from "./contexts/DiscountContext";
+import { ChatProvider } from "./contexts/ChatContext";
 
 SplashScreen.preventAutoHideAsync();
+
+// Initialize auto IP monitoring
+autoIPService.getCurrentIPInfo();
+
+// Initialize auth state restoration
+authPersistenceService.restoreAuthState();
 
 const customFonts = {
   "Rubik-Regular": require("../assets/fonts/Rubik/static/Rubik-Regular.ttf"),
@@ -57,9 +70,13 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <SafeAreaProvider>
-        <View style={styles.container} onLayout={onLayoutRootView}>
-          <AppNavigator />
-        </View>
+        <DiscountProvider>
+          <ChatProvider>
+            <View style={styles.container} onLayout={onLayoutRootView}>
+              <AppNavigator />
+            </View>
+          </ChatProvider>
+        </DiscountProvider>
       </SafeAreaProvider>
     </Provider>
   );

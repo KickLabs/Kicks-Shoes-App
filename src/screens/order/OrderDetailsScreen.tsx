@@ -183,33 +183,37 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
           {/* Order Items */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Items</Text>
-            {order?.items?.map((item: any, index: number) => (
-              <View key={index} style={styles.itemCard}>
-                <Image
-                  source={{
-                    uri:
-                      item.product?.mainImage ||
-                      item.mainImage ||
-                      item.product?.image,
-                  }}
-                  style={styles.itemImage}
-                  defaultSource={require("../../../assets/images/welcome.png")}
-                />
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>
-                    {item.product?.name || item.name || "Unknown Product"}
-                  </Text>
-                  <Text style={styles.itemDetails}>
-                    Quantity: {item.quantity || 0}
-                    {item.size && <Text> • Size: {item.size}</Text>}
-                    {item.color && <Text> • Color: {item.color}</Text>}
-                  </Text>
-                  <Text style={styles.itemPrice}>
-                    {formatPrice(item.price || 0)}
-                  </Text>
+            {order?.items && order.items.length > 0 ? (
+              order.items.map((item: any, index: number) => (
+                <View key={index} style={styles.itemCard}>
+                  <Image
+                    source={{
+                      uri:
+                        item.product?.mainImage ||
+                        item.mainImage ||
+                        item.product?.image,
+                    }}
+                    style={styles.itemImage}
+                    defaultSource={require("../../../assets/images/welcome.png")}
+                  />
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemName}>
+                      {item.product?.name || item.name || "Unknown Product"}
+                    </Text>
+                    <Text style={styles.itemDetails}>
+                      Quantity: {item.quantity || 0}
+                      {item.size ? <Text> • Size: {item.size}</Text> : null}
+                      {item.color ? <Text> • Color: {item.color}</Text> : null}
+                    </Text>
+                    <Text style={styles.itemPrice}>
+                      {formatPrice(item.price || 0)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )) || <Text style={styles.itemName}>No items found</Text>}
+              ))
+            ) : (
+              <Text style={styles.itemName}>No items found</Text>
+            )}
           </View>
           {/* Shipping Address */}
           <View style={styles.section}>
@@ -268,7 +272,7 @@ const OrderDetailsScreen = ({ route, navigation }: any) => {
                 <Text style={styles.cancelButtonText}>Cancel Order</Text>
               </TouchableOpacity>
             </View>
-          )}{" "}
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>

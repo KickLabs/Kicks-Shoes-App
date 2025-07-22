@@ -19,6 +19,7 @@ interface OrderItemProps {
   size: string;
   quantity: number;
   price: number;
+  originalPrice?: number;
   image?: string;
   onIncrease?: () => void;
   onDecrease?: () => void;
@@ -34,6 +35,7 @@ const OrderItem: React.FC<OrderItemProps> = ({
   size,
   quantity,
   price,
+  originalPrice,
   image,
   onIncrease,
   onDecrease,
@@ -77,6 +79,9 @@ const OrderItem: React.FC<OrderItemProps> = ({
             </View>
           </View>
           <Text style={styles.price}>{formatVND(price)}</Text>
+          {originalPrice && originalPrice > price && (
+            <Text style={styles.originalPrice}>{formatVND(originalPrice)}</Text>
+          )}
         </View>
         <View style={styles.actions}>
           <TouchableOpacity
@@ -168,6 +173,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#2F55D4", // xanh đậm
+  },
+  originalPrice: {
+    fontSize: 16,
+    fontWeight: "normal",
+    color: COLORS.gray,
+    textDecorationLine: "line-through",
+    marginTop: 2,
   },
   actions: {
     marginLeft: 8,

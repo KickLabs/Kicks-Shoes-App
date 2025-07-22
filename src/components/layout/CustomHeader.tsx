@@ -24,7 +24,13 @@ const CustomHeader = () => {
               style={styles.logo}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity
+            style={styles.searchIcon}
+            onPress={() => {
+              // Điều hướng sang SearchScreen ở Stack chính
+              navigation.getParent()?.navigate("SearchScreen");
+            }}
+          >
             <Ionicons name="search" size={28} color="#232321" />
           </TouchableOpacity>
         </View>
@@ -49,14 +55,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "rgba(255, 255, 255, 0.9)", // Background trắng với độ trong suốt 90%
+    backgroundColor: "rgba(255, 255, 255, 1)", // Background trắng với độ trong suốt 90%
     borderRadius: 25,
     marginHorizontal: 12,
-    marginTop: -20,
     paddingHorizontal: 20,
     paddingVertical: 8,
     // Thêm shadow để tạo hiệu ứng nổi
     shadowColor: "#000",
+    marginTop: 8,
     shadowOffset: {
       width: 0,
       height: 2,

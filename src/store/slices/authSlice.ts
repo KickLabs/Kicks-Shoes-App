@@ -27,10 +27,15 @@ const authSlice = createSlice({
       state,
       action: PayloadAction<{ user: User; token: string }>
     ) => {
+      console.log("🔄 Redux loginSuccess reducer:", action.payload);
       state.loading = false;
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.error = null;
+      console.log("✅ Redux state updated:", {
+        user: state.user,
+        token: state.token ? "exists" : "null",
+      });
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;

@@ -1,8 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Button,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-// @ts-ignore
 import { orders } from "../../mockData";
 
 interface Order {
@@ -14,8 +21,8 @@ interface Order {
   items: { productId: number; name: string; quantity: number; price: number }[];
 }
 
-const shippedOrders = (orders as Order[]).filter(
-  (order) => order.customer === "John Doe" && order.status === "shipped"
+const shippedOrders = (orders as any[]).filter(
+  (order: any) => order.user?.name === "John Doe" && order.status === "shipped"
 );
 
 const OrderShipped = () => {
@@ -23,7 +30,10 @@ const OrderShipped = () => {
   return (
     <View style={styles.container}>
       <View style={{ paddingTop: 90 }}></View>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 8, alignSelf: 'flex-start', zIndex: 10 }}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{ marginLeft: 8, alignSelf: "flex-start", zIndex: 10 }}
+      >
         <Ionicons name="arrow-back" size={28} color="#232321" />
       </TouchableOpacity>
       <Text style={styles.title}>Shipped Orders</Text>
@@ -38,7 +48,9 @@ const OrderShipped = () => {
             <Text style={styles.productsTitle}>Products:</Text>
             {item.items.map((product, idx) => (
               <View key={idx} style={styles.productItem}>
-                <Text>- {product.name} (x{product.quantity}) - ${product.price}</Text>
+                <Text>
+                  - {product.name} (x{product.quantity}) - ${product.price}
+                </Text>
               </View>
             ))}
           </View>
@@ -80,4 +92,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OrderShipped; 
+export default OrderShipped;

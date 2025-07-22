@@ -9,16 +9,15 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomButton from "@/components/common/button/custom.button";
 import userService from "@/services/user";
-
 const EditProfileScreen = ({ navigation }: { navigation: any }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<any>(null);
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -35,7 +34,6 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
       const data = await userService.getProfile();
       console.log("Profile data in edit screen:", data);
       setProfile(data);
-
       // Set form values
       setFullName((data as any)?.fullName || "");
       setEmail((data as any)?.email || "");
@@ -53,7 +51,6 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
-
       const updateData = {
         fullName: fullName.trim(),
         email: email.trim(),
@@ -61,11 +58,8 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
         address: address.trim(),
         aboutMe: aboutMe.trim(),
       };
-
       console.log("Updating profile with:", updateData);
-
       await userService.updateProfile(updateData);
-
       Alert.alert("Success", "Profile updated successfully!", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
@@ -97,7 +91,7 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.navigate("Profile")}
+            onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="#333" />
@@ -107,7 +101,15 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
 
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Ionicons name="camera-outline" size={48} color="#bbb" />
+            {profile?.avatar ? (
+              <Image
+                source={{ uri: profile.avatar }}
+                style={{ width: 110, height: 110, borderRadius: 55 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="camera-outline" size={48} color="#bbb" />
+            )}
           </View>
           <TouchableOpacity>
             <Text style={styles.changeAvatarText}>Change Profile Photo</Text>
@@ -178,16 +180,9 @@ const EditProfileScreen = ({ navigation }: { navigation: any }) => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  safeArea: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -198,11 +193,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     position: "relative",
   },
-  backButton: {
-    padding: 8,
-    marginRight: 0,
-    zIndex: 2,
-  },
+  backButton: { padding: 8, marginRight: 0, zIndex: 2 },
   headerTitle: {
     flex: 1,
     textAlign: "center",
@@ -211,10 +202,7 @@ const styles = StyleSheet.create({
     color: "#222",
     marginLeft: -32,
   },
-  avatarSection: {
-    alignItems: "center",
-    marginVertical: 28,
-  },
+  avatarSection: { alignItems: "center", marginVertical: 28 },
   avatarCircle: {
     width: 110,
     height: 110,
@@ -230,10 +218,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 2,
   },
-  form: {
-    paddingHorizontal: 20,
-    marginTop: 8,
-  },
+  form: { paddingHorizontal: 20, marginTop: 8 },
   label: {
     fontSize: 14,
     color: "#888",
@@ -272,26 +257,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
+  loadingText: { marginTop: 10, fontSize: 16, color: "#666" },
+  textArea: { minHeight: 80, textAlignVertical: "top" },
   savingContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 10,
   },
-  savingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#666",
-  },
+  savingText: { marginLeft: 8, fontSize: 14, color: "#666" },
 });
-
 export default EditProfileScreen;

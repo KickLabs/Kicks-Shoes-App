@@ -43,27 +43,39 @@ const ListingScreen = () => {
         setLoading(true);
         setError("");
         const res = await api.get(API_ENDPOINTS.PRODUCTS);
-        console.log("API Response:", res.status);
-        console.log("Response data:", res.data);
+        console.log("📡 API Response:", res.status, "- Data received");
 
-        // Since the backend returns { success: true, data: { products: [...], total: number } }
-        // we need to access res.data.data.products
-        let productsData = [];
-        if (res.data?.data?.products) {
-          productsData = res.data.data.products;
-        } else if (res.data?.products) {
-          productsData = res.data.products;
-        } else if (Array.isArray(res.data)) {
-          productsData = res.data;
-        } else if (res.data?.data && Array.isArray(res.data.data)) {
-          productsData = res.data.data;
+        // Define the expected response type
+        type ProductsApiResponse = {
+          success?: boolean;
+          data?: {
+            products?: Product[];
+            total?: number;
+          };
+          products?: Product[];
+        };
+
+        const responseData = res.data as ProductsApiResponse;
+
+        let productsData: Product[] = [];
+        if (responseData.data?.products) {
+          productsData = responseData.data.products;
+        } else if (responseData.products) {
+          productsData = responseData.products;
+        } else if (Array.isArray(responseData)) {
+          productsData = responseData as Product[];
+        } else if (responseData.data && Array.isArray(responseData.data)) {
+          productsData = responseData.data as Product[];
         }
 
-        console.log("Products data:", productsData);
-        console.log("Number of products:", productsData.length);
+        console.log("Total products loaded:", productsData.length);
 
         if (productsData.length > 0) {
-          console.log("First product:", productsData[0]);
+          console.log("Sample product structure:", {
+            name: productsData[0].name,
+            price: productsData[0].price,
+            hasInventory: !!productsData[0].inventory,
+          });
         }
 
         setProducts(productsData);
@@ -79,10 +91,10 @@ const ListingScreen = () => {
   }, []);
 
   const filterProducts = (products: Product[]) => {
-    console.log("filterProducts called with:", products?.length, "products");
+    console.log("Filtering products - Total:", products?.length || 0);
 
     if (!products || !Array.isArray(products)) {
-      console.log("Products is not an array or undefined");
+      console.log("❌ Products is not an array or undefined");
       return [];
     }
 
@@ -93,14 +105,14 @@ const ListingScreen = () => {
       filters.categories.length === 0 &&
       filters.brands.length === 0
     ) {
-      console.log("No filters applied, returning all products");
+      console.log("✅ No filters applied, returning all products");
       return products;
     }
 
     const filtered = products.filter((product) => {
       // Handle case where product.inventory might be undefined
       if (!product.inventory || !Array.isArray(product.inventory)) {
-        console.log("Product has no inventory:", product.name);
+        // console.log("Product has no inventory:", product.name);
         // Don't filter out products without inventory, just check other criteria
         const matchesCategory =
           filters.categories.length === 0 ||
@@ -150,22 +162,24 @@ const ListingScreen = () => {
       const passes =
         matchesInventory && matchesCategory && matchesBrand && matchesPrice;
       if (!passes) {
-        console.log("Product filtered out:", product.name, {
-          matchesInventory,
-          matchesCategory,
-          matchesBrand,
-          matchesPrice,
-        });
+        // console.log("Product filtered out:", product.name, {
+        //   matchesInventory,
+        //   matchesCategory,
+        //   matchesBrand,
+        //   matchesPrice,
+        // });
       }
 
       return passes;
     });
 
-    console.log("Filtered products count:", filtered.length);
+    console.log("✅ Filtered products count:", filtered.length);
     return filtered;
   };
 
-  const totalPages = Math.ceil((products || []).length / pageSize);
+  // Calculate pagination based on filtered products
+  const filteredProducts = filterProducts(products);
+  const totalPages = Math.ceil(filteredProducts.length / pageSize);
 
   const currentProducts = (products || []).slice(
     (currentPage - 1) * pageSize,
@@ -187,6 +201,7 @@ const ListingScreen = () => {
           borderRadius: 16,
           overflow: "hidden",
           marginBottom: 16,
+          marginHorizontal: 16,
           position: "relative",
           marginTop: Platform.OS === "ios" ? 30 : 0,
         }}
@@ -234,6 +249,7 @@ const ListingScreen = () => {
           flexDirection: "row",
           justifyContent: "space-between",
           marginBottom: 16,
+          paddingHorizontal: 16,
         }}
       >
         <TouchableOpacity
@@ -267,12 +283,14 @@ const ListingScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 4 }}>
-        Life Style Shoes
-      </Text>
-      <Text style={{ marginBottom: 16, color: "#555" }}>
-        {(products || []).length} items
-      </Text>
+      <View style={{ paddingHorizontal: 16 }}>
+        <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 4 }}>
+          Life Style Shoes
+        </Text>
+        <Text style={{ marginBottom: 16, color: "#555" }}>
+          {filteredProducts.length} items
+        </Text>
+      </View>
     </>
   );
 
@@ -348,81 +366,97 @@ const ListingScreen = () => {
         </View>
       ) : (
         <FlatList
-          key="products-single-column"
-          data={(() => {
-            const filteredProducts = filterProducts(products);
-            const paginatedProducts = filteredProducts.slice(
-              (currentPage - 1) * pageSize,
-              currentPage * pageSize
-            );
-            console.log("Filtered products count:", filteredProducts.length);
-            console.log("Paginated products count:", paginatedProducts.length);
-            console.log("Current page:", currentPage);
-            return paginatedProducts;
-          })()}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => {
-            console.log("Rendering item:", item.name);
-            const price =
-              typeof item.price === "number"
-                ? item.price
-                : (item.price as any)?.regular || 0;
-
-            // Get the image from mainImage or from the first inventory item
-            let imageUri = item.mainImage;
-            if (!imageUri && item.inventory && item.inventory.length > 0) {
-              const firstInventoryItem = item.inventory[0];
-              if (
-                firstInventoryItem.images &&
-                firstInventoryItem.images.length > 0
-              ) {
-                imageUri = firstInventoryItem.images[0];
-              }
-            }
-
-            console.log("Image URI for", item.name, ":", imageUri);
-
-            return (
-              <View style={{ 
-                width: "100%", // Full width for listing cards
-                marginBottom: 16,
-              }}>
-                <ProductCard
-                  image={{
-                    uri: imageUri || "https://via.placeholder.com/300x300",
-                  }}
-                  name={item.name}
-                  price={formatVND(price)}
-                  tag={
-                    (item.price as any)?.isOnSale &&
-                    (item.price as any)?.discountPercent > 0
-                      ? `${(item.price as any).discountPercent}% off`
-                      : undefined
-                  }
-                  onPress={() => {
-                    // Navigate to ProductDetails screen
-                    const parentNavigation = navigation.getParent();
-                    if (parentNavigation) {
-                      parentNavigation.navigate("ProductDetails", {
-                        productId: item.id,
-                      });
-                    }
-                  }}
-                />
-              </View>
-            );
-          }}
-          numColumns={1}
+          key="products-listing"
+          data={[]}
+          renderItem={() => null}
           ListHeaderComponent={renderHeader}
-          ListFooterComponent={renderFooter}
+          ListFooterComponent={() => (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  paddingHorizontal: 16,
+                }}
+              >
+                {(() => {
+                  const paginatedProducts = filteredProducts.slice(
+                    (currentPage - 1) * pageSize,
+                    currentPage * pageSize
+                  );
+                  console.log(
+                    "📄 Page",
+                    currentPage,
+                    "- Showing:",
+                    paginatedProducts.length,
+                    "of",
+                    filteredProducts.length
+                  );
+
+                  return paginatedProducts.map((item) => {
+                    const price =
+                      typeof item.price === "number"
+                        ? item.price
+                        : (item.price as any)?.regular || 0;
+
+                    // Get the image from mainImage or from the first inventory item
+                    let imageUri = item.mainImage;
+                    if (
+                      !imageUri &&
+                      item.inventory &&
+                      item.inventory.length > 0
+                    ) {
+                      const firstInventoryItem = item.inventory[0];
+                      if (
+                        firstInventoryItem.images &&
+                        firstInventoryItem.images.length > 0
+                      ) {
+                        imageUri = firstInventoryItem.images[0];
+                      }
+                    }
+
+                    return (
+                      <ProductCard
+                        key={item.id}
+                        image={{
+                          uri:
+                            imageUri || "https://via.placeholder.com/300x300",
+                        }}
+                        name={item.name}
+                        price={formatVND(price)}
+                        tag={
+                          item.isNew
+                            ? "New"
+                            : (item.price as any)?.isOnSale &&
+                                (item.price as any)?.discountPercent > 0
+                              ? `${(item.price as any).discountPercent}% off`
+                              : undefined
+                        }
+                        onPress={() => {
+                          // Navigate to ProductDetails screen
+                          const parentNavigation = navigation.getParent();
+                          if (parentNavigation) {
+                            parentNavigation.navigate("ProductDetails", {
+                              productId: item.id,
+                            });
+                          }
+                        }}
+                      />
+                    );
+                  });
+                })()}
+              </View>
+              {renderFooter()}
+            </>
+          )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingTop: 100,
-            paddingHorizontal: 16,
             paddingBottom: 16,
             backgroundColor: "#fff",
           }}
-          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
         />
       )}
       <FilterModal

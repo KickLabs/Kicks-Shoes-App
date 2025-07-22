@@ -19,6 +19,7 @@ interface CartItemProps {
   size: string;
   quantity: number;
   price: number;
+  originalPrice?: number;
   image: string;
   onQuantityChange: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
@@ -32,6 +33,7 @@ const CartItem: React.FC<CartItemProps> = ({
   size,
   quantity,
   price,
+  originalPrice,
   image,
   onQuantityChange,
   onRemove,
@@ -122,6 +124,11 @@ const CartItem: React.FC<CartItemProps> = ({
             </View>
           </View>
           <Text style={styles.price}>{formatVND(price * quantity)}</Text>
+          {originalPrice && originalPrice > price && (
+            <Text style={styles.originalPrice}>
+              {formatVND(originalPrice * quantity)}
+            </Text>
+          )}
         </View>
         <View style={styles.actions}>
           <TouchableOpacity style={styles.icon}>
@@ -202,6 +209,14 @@ const styles = StyleSheet.create({
     color: COLORS.blue,
     fontFamily: "Rubik-Bold",
     marginTop: 4,
+  },
+  originalPrice: {
+    fontSize: 14,
+    fontWeight: "normal",
+    color: COLORS.gray,
+    fontFamily: "Rubik-Regular",
+    textDecorationLine: "line-through",
+    marginTop: 2,
   },
   actions: {
     justifyContent: "space-between",

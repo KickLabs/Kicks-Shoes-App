@@ -15,6 +15,7 @@ import CartHeader from "./CartHeader";
 import CartItem from "./CartItem";
 import OrderSummary from "./OrderSummaryWithPromo";
 import CheckoutButton from "./CheckoutButton";
+import DiscountInput from "@/components/cart/DiscountInput";
 import { COLORS } from "../../constants/theme";
 import { products as mockProducts } from "../../mockData";
 import ProductCard from "@/components/common/ProductCard";
@@ -22,9 +23,13 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "@/types";
 import { StackNavigationProp } from "@react-navigation/stack";
 import cartService, { CartItem as CartItemType } from "@/services/cart";
+import { DiscountValidationResult } from "@/services/discount";
 import { Ionicons } from "@expo/vector-icons";
 import { formatVND } from "../../utils/currency";
-import AuthGuard from "@/components/auth/AuthGuard";
+import AuthGuard from "../../components/auth/AuthGuard";
+import { runNetworkDiagnostics } from "../../utils/network";
+import NetworkStatusBanner from "../../components/common/NetworkStatusBanner";
+import { useDiscount } from "@/contexts/DiscountContext";
 
 const newProducts = mockProducts.slice(0, 4);
 
@@ -40,6 +45,9 @@ const CartScreen: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [itemCount, setItemCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Use global discount context
+  const { discount, setDiscount, clearDiscount } = useDiscount();
 
   const fetchCartData = async () => {
     try {
@@ -85,10 +93,32 @@ const CartScreen: React.FC = () => {
   const handleRemoveItem = async (itemId: string) => {
     try {
       await cartService.removeFromCart(itemId);
-      await fetchCartData(); // Refresh cart data
-    } catch (err: any) {
-      console.error("Error removing cart item:", err);
+      await fetchCartData();
+    } catch (error) {
+      console.error("Error removing item:", error);
+      setError("Failed to remove item from cart");
     }
+  };
+
+  const handleDiscountApplied = (discountResult: DiscountValidationResult) => {
+    setDiscount(discountResult);
+    console.log("Discount applied:", discountResult);
+  };
+
+  const handleDiscountRemoved = () => {
+    clearDiscount();
+    console.log("Discount removed");
+  };
+
+  const calculateFinalTotal = () => {
+    const deliveryFee = total > 500000 ? 0 : 30000;
+    const subtotal = total + deliveryFee;
+
+    if (discount && discount.isValid) {
+      return Math.max(0, subtotal - discount.discountAmount);
+    }
+
+    return subtotal;
   };
 
   const goToCheckoutScreen = () => {
@@ -165,21 +195,36 @@ const CartScreen: React.FC = () => {
                   size={item.size || ""}
                   quantity={item.quantity}
                   price={item.price}
+                  originalPrice={item.originalPrice}
                   image={item.image}
                   onQuantityChange={handleQuantityChange}
                   onRemove={handleRemoveItem}
                 />
               ))}
 
+              <DiscountInput
+                cartTotal={total}
+                cartItems={cartItems}
+                onDiscountApplied={handleDiscountApplied}
+                onDiscountRemoved={handleDiscountRemoved}
+                appliedDiscount={discount}
+              />
+
               <OrderSummary
                 itemCount={itemCount}
                 subtotal={total}
-                delivery={total > 500000 ? 0 : 30000} // Free delivery over 500k VND, otherwise 30k VND
-                total={total + (total > 500000 ? 0 : 30000)}
+                delivery={total > 500000 ? 0 : 30000}
+                total={calculateFinalTotal()}
+                discount={discount}
               />
 
               <View style={styles.checkoutContainer}>
-                <CheckoutButton onPress={goToCheckoutScreen} />
+                <CheckoutButton
+                  onPress={() => {
+                    // Pass discount data through navigation params or global state
+                    navigation.getParent()?.navigate("CheckoutScreen");
+                  }}
+                />
               </View>
             </>
           )}
@@ -226,7 +271,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
   },
   loadingContainer: {
     flex: 1,

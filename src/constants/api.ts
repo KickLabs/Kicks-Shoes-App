@@ -1,4 +1,4 @@
-export const API_URL = "http://192.168.1.19:3000/api";
+export const API_URL = "http://192.168.1.71:3000/api";
 
 export const API_ENDPOINTS = {
   // Auth
@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   REGISTER: "/auth/register",
   LOGOUT: "/auth/logout",
   REFRESH_TOKEN: "/auth/refresh-token",
+  FORGOT_PASSWORD: "/auth/forgot-password",
 
   // User
   USER_PROFILE: "/auth/me",
@@ -23,6 +24,10 @@ export const API_ENDPOINTS = {
   // Cart
   CART: "/cart",
   CART_ITEM: (id: string) => `/cart/${id}`,
+
+  // Wishlist/Favourites
+  WISHLIST: "/favourites",
+  WISHLIST_ITEM: (id: string) => `/favourites/${id}`,
 
   // Orders
   ORDERS: "/orders",

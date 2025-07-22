@@ -1,8 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, Button, Alert, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Button,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-// @ts-ignore
 import { orders } from "../../mockData";
 
 interface Order {
@@ -18,7 +25,7 @@ const pendingOrders = (orders as Order[]).filter(
   (order) => order.customer === "John Doe" && order.status === "pending"
 );
 
-const OrderPending = () => {  
+const OrderPending = () => {
   const navigation = useNavigation();
 
   const handleCancel = (orderId: number) => {
@@ -41,7 +48,10 @@ const OrderPending = () => {
   return (
     <View style={styles.container}>
       <View style={{ paddingTop: 90 }}></View>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 8, alignSelf: 'flex-start', zIndex: 10 }}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{ marginLeft: 8, alignSelf: "flex-start", zIndex: 10 }}
+      >
         <Ionicons name="arrow-back" size={28} color="#232321" />
       </TouchableOpacity>
       <Text style={styles.title}>Pending Orders</Text>
@@ -56,11 +66,17 @@ const OrderPending = () => {
             <Text style={styles.productsTitle}>Products:</Text>
             {item.items.map((product, idx) => (
               <View key={idx} style={styles.productItem}>
-                <Text>- {product.name} (x{product.quantity}) - ${product.price}</Text>
+                <Text>
+                  - {product.name} (x{product.quantity}) - ${product.price}
+                </Text>
               </View>
             ))}
             <View style={styles.cancelBtn}>
-              <Button title="Cancel" color="#d32f2f" onPress={() => handleCancel(item.id)} />
+              <Button
+                title="Cancel"
+                color="#d32f2f"
+                onPress={() => handleCancel(item.id)}
+              />
             </View>
           </View>
         )}
@@ -106,4 +122,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OrderPending; 
+export default OrderPending;

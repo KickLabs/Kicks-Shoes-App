@@ -1,30 +1,33 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
-  Text,
-  TextInput,
+  SafeAreaView,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
+  ActivityIndicator,
+  TextInput,
 } from "react-native";
-import CustomCheckbox from "@/components/common/CustomCheckbox";
-import CartHeader from "./OrderHeader";
-import OrderItem from "./OrderItem";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "@/types";
+import { useDiscount } from "@/contexts/DiscountContext";
 import OrderSummary from "./OrderSummaryWithPromo";
 import CheckoutButton from "./CheckoutButton";
-import { COLORS } from "../../constants/theme";
-import ProductCard from "@/components/common/ProductCard";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "@/types";
-import { StackNavigationProp } from "@react-navigation/stack";
-import Header from "@/components/layout/Header";
-import { Ionicons } from "@expo/vector-icons";
-import cartService, { CartItem } from "@/services/cart";
-import { formatVND } from "@/utils/currency";
+import cartService from "@/services/cart";
 import orderService from "@/services/order";
+import { DiscountValidationResult } from "@/services/discount";
+import { COLORS } from "../../constants/theme";
+import CartHeader from "./OrderHeader";
+import OrderItem from "./OrderItem";
+import CustomCheckbox from "@/components/common/CustomCheckbox";
+import ProductCard from "@/components/common/ProductCard";
 import userService from "@/services/user";
+import { formatVND } from "@/utils/currency";
+import DiscountInput from "@/components/cart/DiscountInput";
 
 interface UserProfile {
   id?: string;
@@ -41,7 +44,7 @@ const CheckoutScreen: React.FC = () => {
   type NavigationProp = StackNavigationProp<RootStackParamList>;
   const navigation = useNavigation<NavigationProp>();
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
   const [cartTotal, setCartTotal] = useState(0);
   const [itemCount, setItemCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -65,9 +68,25 @@ const CheckoutScreen: React.FC = () => {
     "standard"
   );
 
+  // Thêm state cho phương thức thanh toán
+  const [paymentMethod, setPaymentMethod] = useState<"vnpay" | "cod">("cod");
+
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [itemLoading, setItemLoading] = useState<{ [id: string]: boolean }>({});
+
+  const { discount, setDiscount, clearDiscount } = useDiscount();
+
+  // Discount handlers
+  const handleDiscountApplied = (discountResult: DiscountValidationResult) => {
+    setDiscount(discountResult);
+    console.log("Discount applied in checkout:", discountResult);
+  };
+
+  const handleDiscountRemoved = () => {
+    clearDiscount();
+    console.log("Discount removed in checkout");
+  };
 
   const fetchCartData = async () => {
     try {
@@ -129,7 +148,17 @@ const CheckoutScreen: React.FC = () => {
   }, []);
 
   const deliveryFee = deliveryMethod === "standard" ? 30000 : 0;
-  const totalWithDelivery = cartTotal + deliveryFee;
+  const subtotalWithDelivery = cartTotal + deliveryFee;
+
+  // Calculate final total with discount
+  const calculateFinalTotal = () => {
+    if (discount && discount.isValid) {
+      return Math.max(0, subtotalWithDelivery - discount.discountAmount);
+    }
+    return subtotalWithDelivery;
+  };
+
+  const finalTotal = calculateFinalTotal();
 
   if (loading) {
     return (
@@ -165,7 +194,7 @@ const CheckoutScreen: React.FC = () => {
     );
   }
 
-  const handleIncrease = async (item: CartItem) => {
+  const handleIncrease = async (item: any) => {
     setItemLoading((prev) => ({ ...prev, [item.id]: true }));
     try {
       await cartService.updateCartItem(item.id, item.quantity + 1);
@@ -176,7 +205,7 @@ const CheckoutScreen: React.FC = () => {
       setItemLoading((prev) => ({ ...prev, [item.id]: false }));
     }
   };
-  const handleDecrease = async (item: CartItem) => {
+  const handleDecrease = async (item: any) => {
     if (item.quantity <= 1) return;
     setItemLoading((prev) => ({ ...prev, [item.id]: true }));
     try {
@@ -188,7 +217,7 @@ const CheckoutScreen: React.FC = () => {
       setItemLoading((prev) => ({ ...prev, [item.id]: false }));
     }
   };
-  const handleRemove = async (item: CartItem) => {
+  const handleRemove = async (item: any) => {
     setItemLoading((prev) => ({ ...prev, [item.id]: true }));
     try {
       await cartService.removeFromCart(item.id);
@@ -232,6 +261,17 @@ const CheckoutScreen: React.FC = () => {
         address: formData.address,
         phone: formData.phone,
         deliveryMethod: deliveryMethod,
+        paymentMethod: paymentMethod,
+        discount:
+          discount && discount.isValid
+            ? {
+                code: discount.discount.code,
+                discountAmount: discount.discountAmount,
+                type: discount.discount.type,
+                value: discount.discount.value,
+              }
+            : undefined,
+        finalTotal: finalTotal,
       });
       setCheckoutLoading(false);
       // Navigate to order success/history screen
@@ -285,6 +325,7 @@ const CheckoutScreen: React.FC = () => {
           size={item.size || "N/A"}
           quantity={item.quantity}
           price={item.price}
+          originalPrice={item.originalPrice}
           image={item.image}
           onIncrease={() => handleIncrease(item)}
           onDecrease={() => handleDecrease(item)}
@@ -293,11 +334,20 @@ const CheckoutScreen: React.FC = () => {
         />
       ))}
 
+      <DiscountInput
+        cartTotal={cartTotal}
+        cartItems={cartItems}
+        onDiscountApplied={handleDiscountApplied}
+        onDiscountRemoved={handleDiscountRemoved}
+        appliedDiscount={discount}
+      />
+
       <OrderSummary
         itemCount={itemCount}
         subtotal={cartTotal}
         delivery={deliveryFee}
-        total={totalWithDelivery}
+        total={finalTotal}
+        discount={discount}
       />
 
       <View style={styles.section}>
@@ -391,6 +441,59 @@ const CheckoutScreen: React.FC = () => {
             <Text style={styles.priceText}>Free</Text>
           </View>
         </TouchableOpacity>
+
+        {/* Payment Method Section - đặt ngay dưới Shipping Address */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment Method</Text>
+          <View style={styles.paymentMethodColumn}>
+            <TouchableOpacity
+              style={[
+                styles.paymentOptionBox,
+                paymentMethod === "cod" && styles.paymentOptionBoxSelected,
+              ]}
+              onPress={() => setPaymentMethod("cod")}
+              activeOpacity={0.8}
+            >
+              <View style={styles.paymentCheckIconWrap}>
+                <View
+                  style={[
+                    styles.paymentRadio,
+                    paymentMethod === "cod" && styles.paymentRadioSelected,
+                  ]}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.paymentTitle}>Cash on Delivery (COD)</Text>
+                <Text style={styles.paymentDesc}>
+                  Pay with cash when you receive the order
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.paymentOptionBox,
+                paymentMethod === "vnpay" && styles.paymentOptionBoxSelected,
+              ]}
+              onPress={() => setPaymentMethod("vnpay")}
+              activeOpacity={0.8}
+            >
+              <View style={styles.paymentCheckIconWrap}>
+                <View
+                  style={[
+                    styles.paymentRadio,
+                    paymentMethod === "vnpay" && styles.paymentRadioSelected,
+                  ]}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.paymentTitle}>VNPay</Text>
+                <Text style={styles.paymentDesc}>
+                  Pay online via VNPay gateway
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Checkboxes */}
         <View style={styles.checkboxContainer}>
@@ -633,6 +736,62 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 20,
     marginLeft: 10,
+  },
+  paymentMethodColumn: {
+    flexDirection: "column",
+    gap: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  paymentOptionBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#ccc",
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+    minHeight: 56,
+  },
+  paymentOptionBoxSelected: {
+    borderColor: COLORS.black,
+    backgroundColor: "#f3f6fa",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  paymentCheckIconWrap: {
+    marginRight: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paymentRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#bbb",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paymentRadioSelected: {
+    borderColor: COLORS.black,
+    backgroundColor: COLORS.black,
+  },
+  paymentTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.black,
+  },
+  paymentDesc: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
   },
 });
 
