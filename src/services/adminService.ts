@@ -55,13 +55,10 @@ interface ApiCategory {
   _id: string;
   name: string;
   description: string;
-  image?: string;
-  status: boolean; // Đổi từ isActive sang status
-  productsCount?: number; // Thêm trường productsCount
+  image: string;
+  isActive: boolean;
   productCount?: number;
-  slug?: string; // Thêm trường slug
   createdAt: string;
-  updatedAt?: string; // Thêm trường updatedAt
 }
 
 interface ApiOrder {
@@ -353,6 +350,7 @@ export const toggleUserStatus = async (userId: string): Promise<void> => {
 export const createCategory = async (categoryData: {
   name: string;
   description: string;
+  image?: string;
 }): Promise<ApiCategory> => {
   try {
     console.log("[AdminService] Creating category:", categoryData);
@@ -387,7 +385,7 @@ export const updateCategory = async (
   categoryData: {
     name?: string;
     description?: string;
-    status?: boolean;
+    image?: string;
   }
 ): Promise<ApiCategory> => {
   try {
