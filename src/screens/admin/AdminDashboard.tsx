@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
+  ActivityIndicator,
   Alert,
-  SafeAreaView,
   Dimensions,
   FlatList,
   Image,
-  TextInput,
-  ActivityIndicator,
+  Modal,
   RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import ProductDetails from "../../components/common/ProductDetails";
 import * as adminService from "../../services/adminService";
 
 const { width, height } = Dimensions.get("window");
@@ -98,6 +100,8 @@ const AdminDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     loadUserInfo();
@@ -306,6 +310,63 @@ const AdminDashboard: React.FC = () => {
       setProducts([]);
     }
   };
+
+  const handleCreateProduct = async (newProductData: Product) => {
+  setLoading(true);
+  try {
+    const createdProduct = await adminService.createProduct(newProductData);
+    Alert.alert("Success", "Product created successfully");
+    loadProducts();  // Reload products after creation
+  } catch (error) {
+    console.error("Error creating product:", error);
+    Alert.alert("Error", "Failed to create product");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleUpdateProduct = async (productId: string, updatedData: Product) => {
+  setLoading(true);
+  try {
+    const updatedProduct = await adminService.updateProduct(productId, updatedData);
+    Alert.alert("Success", "Product updated successfully");
+    loadProducts();  // Reload products after update
+  } catch (error) {
+    console.error("Error updating product:", error);
+    Alert.alert("Error", "Failed to update product");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const handleDeleteProduct = async (productId: string) => {
+  setLoading(true);
+  try {
+    await adminService.deleteProduct(productId);
+    Alert.alert("Success", "Product deleted successfully");
+    loadProducts();  // Reload products after deletion
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    Alert.alert("Error", "Failed to delete product");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleRecalculatePrice = async (productId: string) => {
+  setLoading(true);
+  try {
+    await adminService.recalculatePrice(productId);
+    Alert.alert("Success", "Price recalculated successfully");
+    loadProducts();  // Reload products after recalculation
+  } catch (error) {
+    console.error("Error recalculating price:", error);
+    Alert.alert("Error", "Failed to recalculate price");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const loadCategories = async () => {
     try {
@@ -930,11 +991,20 @@ const AdminDashboard: React.FC = () => {
     </ScrollView>
   );
 
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setShowProductForm(true);
+  };
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setShowProductForm(true);
+  };
+
   const renderProducts = () => (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Products Management</Text>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.addButtonText}>Add Product</Text>
         </TouchableOpacity>
@@ -1022,10 +1092,19 @@ const AdminDashboard: React.FC = () => {
                 </View>
               </View>
               <View style={styles.productActions}>
-                <TouchableOpacity style={styles.actionIconButton}>
+                <TouchableOpacity style={styles.actionIconButton} onPress={() => handleEditProduct(item)}>
                   <Ionicons name="create" size={20} color="#1a1a1a" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionIconButton}>
+                <TouchableOpacity style={styles.actionIconButton} onPress={() => {
+                  Alert.alert(
+                    "Delete Product",
+                    "Are you sure you want to delete this product?",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      { text: "Delete", style: "destructive", onPress: () => handleDeleteProduct(item.id) },
+                    ]
+                  );
+                }}>
                   <Ionicons name="trash" size={20} color="#dc3545" />
                 </TouchableOpacity>
               </View>
@@ -1037,6 +1116,24 @@ const AdminDashboard: React.FC = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         />
+      )}
+      {/* ProductDetails Modal */}
+      {showProductForm && (
+        <Modal visible={showProductForm} animationType="slide">
+          <ProductDetails
+            isEdit={!!editingProduct}
+            productId={editingProduct?.id}
+            onSave={(productData: any) => {
+              if (editingProduct) {
+                handleUpdateProduct(editingProduct.id, productData);
+              } else {
+                handleCreateProduct(productData);
+              }
+              setShowProductForm(false);
+            }}
+            onCancel={() => setShowProductForm(false)}
+          />
+        </Modal>
       )}
     </View>
   );
