@@ -25,7 +25,7 @@ class OrderService {
       // Lấy sản phẩm trong giỏ hàng
       const cart = await cartService.getCart();
       const products = cart.items.map((item: CartItem) => ({
-        id: item.productId,
+        id: item.productId, // Đúng với backend: id là _id của sản phẩm
         quantity: item.quantity,
         price: item.price,
         size: item.size,
@@ -52,23 +52,39 @@ class OrderService {
         products,
         shippingAddress: payload.address,
         phone: payload.phone,
-        shippingMethod: payload.deliveryMethod,
-        paymentMethod,
+        shippingMethod: payload.deliveryMethod, // Đúng tên trường backend
+        paymentMethod, // vnpay hoặc cash_on_delivery
         note: payload.note,
         totalAmount,
         totalPrice: totalAmount,
         shippingCost: deliveryFee,
         tax: 0,
         discount: discountAmount,
-        discountCode: payload.discount?.code || null,
+        // discountCode chỉ gửi nếu là string hợp lệ, giống web
+        ...(payload.discount &&
+        typeof payload.discount.code === "string" &&
+        payload.discount.code.trim() !== ""
+          ? { discountCode: payload.discount.code }
+          : {}),
       };
 
       // 1. Tạo order trước
-      const response = await apiService.post<Order>(
-        API_ENDPOINTS.ORDERS,
-        orderPayload
-      );
-      const createdOrder = (response as any).data;
+      let createdOrder;
+      try {
+        const response = await apiService.post<Order>(
+          API_ENDPOINTS.ORDERS,
+          orderPayload
+        );
+        createdOrder =
+          (response as any).data?.data || (response as any).data || response;
+      } catch (err: any) {
+        // Log lỗi chi tiết từ backend
+        if (err?.response?.data) {
+          console.error("[OrderService] Backend error:", err.response.data);
+          throw new Error(err.response.data.message || "Tạo đơn hàng thất bại");
+        }
+        throw err;
+      }
 
       // 2. Nếu là VNPay, gọi API lấy paymentUrl và mở trình duyệt
       if (paymentMethod === "vnpay" && createdOrder && createdOrder._id) {
@@ -108,7 +124,15 @@ class OrderService {
       }
 
       return createdOrder;
-    } catch (error) {
+    } catch (error: any) {
+      // Log lỗi chi tiết
+      if (error?.response?.data) {
+        console.error(
+          "[OrderService] Error creating order:",
+          error.response.data
+        );
+        throw new Error(error.response.data.message || "Tạo đơn hàng thất bại");
+      }
       console.error("Error creating order:", error);
       throw error;
     }

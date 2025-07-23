@@ -54,7 +54,7 @@ const PaymentResultScreen: React.FC = () => {
 
   const handleViewOrder = () => {
     if (paymentInfo?.orderId) {
-      (navigation as any).navigate("OrderDetails", {
+      (navigation as any).navigate("OrderDetailsScreen", {
         orderId: paymentInfo.orderId,
       });
     }

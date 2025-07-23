@@ -351,7 +351,7 @@ const OrderHistory: React.FC<OrderHistoryProps> = ({ navigation }) => {
         <TouchableOpacity
           style={[styles.buyAgainButton, styles.detailsButton]}
           onPress={() =>
-            navigation.navigate("OrderDetails", { orderId: order._id })
+            navigation.navigate("OrderDetailsScreen", { orderId: order._id })
           }
         >
           <Text style={[styles.buyAgainText, styles.detailsButtonText]}>

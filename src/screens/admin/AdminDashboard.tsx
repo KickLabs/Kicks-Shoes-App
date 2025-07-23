@@ -18,8 +18,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image as RNImage,
 } from "react-native";
 import ProductDetails from "../../components/common/ProductDetails";
+import OrderDetailsModal from "../../components/admin/OrderDetailsModal";
 import * as adminService from "../../services/adminService";
 import { Picker } from "@react-native-picker/picker";
 
@@ -99,7 +101,7 @@ const AdminDashboard: React.FC = () => {
     totalOrders: 0,
     totalRevenue: 0,
     totalCategories: 0,
-    totalConversations: 0
+    totalConversations: 0,
   });
 
   const [users, setUsers] = useState<User[]>([]);
@@ -108,12 +110,15 @@ const AdminDashboard: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailVisible, setOrderDetailVisible] = useState(false);
-  const [orderStatusDraft, setOrderStatusDraft] = useState<string>("");
+
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userDetailVisible, setUserDetailVisible] = useState(false);
   const [banLoading, setBanLoading] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Thêm state cho fallback avatar
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
   useEffect(() => {
     loadUserInfo();
@@ -126,6 +131,10 @@ const AdminDashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, [selectedTab]);
 
+  useEffect(() => {
+    setAvatarUri(null);
+  }, [selectedUser]);
+
   const loadUserInfo = async () => {
     try {
       const userInfo = await AsyncStorage.getItem("userInfo");
@@ -134,7 +143,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] Debug token check:", {
         hasUserInfo: !!userInfo,
         hasToken: !!token,
-        tokenLength: token?.length || 0
+        tokenLength: token?.length || 0,
       });
 
       if (userInfo) {
@@ -192,8 +201,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert(
@@ -224,7 +233,7 @@ const AdminDashboard: React.FC = () => {
           user.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=3b82f6&color=fff`,
         phone: user.phone,
-        address: user.address
+        address: user.address,
       }));
 
       setUsers(mappedUsers);
@@ -235,8 +244,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load users. Please try again.");
@@ -295,7 +304,7 @@ const AdminDashboard: React.FC = () => {
           isPublished: product.status || product.isPublished || false,
           images: product.images || [],
           image:
-            product.mainImage || (product.images && product.images[0]) || ""
+            product.mainImage || (product.images && product.images[0]) || "",
         };
       });
 
@@ -304,7 +313,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] First product image data:", {
         mainImage: apiProducts[0]?.mainImage,
         images: apiProducts[0]?.images,
-        mappedImage: mappedProducts[0]?.image
+        mappedImage: mappedProducts[0]?.image,
       });
     } catch (error: any) {
       console.error("Error loading products:", error);
@@ -312,8 +321,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load products. Please try again.");
@@ -325,61 +334,66 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleCreateProduct = async (newProductData: Product) => {
-  setLoading(true);
-  try {
-    const createdProduct = await adminService.createProduct(newProductData);
-    Alert.alert("Success", "Product created successfully");
-    loadProducts();  // Reload products after creation
-  } catch (error) {
-    console.error("Error creating product:", error);
-    Alert.alert("Error", "Failed to create product");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const createdProduct = await adminService.createProduct(newProductData);
+      Alert.alert("Success", "Product created successfully");
+      loadProducts(); // Reload products after creation
+    } catch (error) {
+      console.error("Error creating product:", error);
+      Alert.alert("Error", "Failed to create product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleUpdateProduct = async (productId: string, updatedData: Product) => {
-  setLoading(true);
-  try {
-    const updatedProduct = await adminService.updateProduct(productId, updatedData);
-    Alert.alert("Success", "Product updated successfully");
-    loadProducts();  // Reload products after update
-  } catch (error) {
-    console.error("Error updating product:", error);
-    Alert.alert("Error", "Failed to update product");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleUpdateProduct = async (
+    productId: string,
+    updatedData: Product
+  ) => {
+    setLoading(true);
+    try {
+      const updatedProduct = await adminService.updateProduct(
+        productId,
+        updatedData
+      );
+      Alert.alert("Success", "Product updated successfully");
+      loadProducts(); // Reload products after update
+    } catch (error) {
+      console.error("Error updating product:", error);
+      Alert.alert("Error", "Failed to update product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeleteProduct = async (productId: string) => {
-  setLoading(true);
-  try {
-    await adminService.deleteProduct(productId);
-    Alert.alert("Success", "Product deleted successfully");
-    loadProducts();  // Reload products after deletion
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    Alert.alert("Error", "Failed to delete product");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await adminService.deleteProduct(productId);
+      Alert.alert("Success", "Product deleted successfully");
+      loadProducts(); // Reload products after deletion
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Alert.alert("Error", "Failed to delete product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleRecalculatePrice = async (productId: string) => {
-  setLoading(true);
-  try {
-    await adminService.recalculatePrice(productId);
-    Alert.alert("Success", "Price recalculated successfully");
-    loadProducts();  // Reload products after recalculation
-  } catch (error) {
-    console.error("Error recalculating price:", error);
-    Alert.alert("Error", "Failed to recalculate price");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const handleRecalculatePrice = async (productId: string) => {
+    setLoading(true);
+    try {
+      await adminService.recalculatePrice(productId);
+      Alert.alert("Success", "Price recalculated successfully");
+      loadProducts(); // Reload products after recalculation
+    } catch (error) {
+      console.error("Error recalculating price:", error);
+      Alert.alert("Error", "Failed to recalculate price");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -413,7 +427,7 @@ const handleRecalculatePrice = async (productId: string) => {
         isActive: category.isActive,
         image:
           category.image ||
-          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`
+          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`,
       }));
 
       setCategories(mappedCategories);
@@ -427,8 +441,8 @@ const handleRecalculatePrice = async (productId: string) => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load categories. Please try again.");
@@ -475,7 +489,7 @@ const handleRecalculatePrice = async (productId: string) => {
         status: order.status || "pending",
         createdAt: order.createdAt
           ? new Date(order.createdAt).toLocaleDateString("vi-VN")
-          : new Date().toLocaleDateString("vi-VN")
+          : new Date().toLocaleDateString("vi-VN"),
       }));
 
       setOrders(mappedOrders);
@@ -486,8 +500,8 @@ const handleRecalculatePrice = async (productId: string) => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load orders. Please try again.");
@@ -554,7 +568,7 @@ const handleRecalculatePrice = async (productId: string) => {
                 "userInfo",
                 "refreshToken",
                 "adminSession",
-                "lastLoginTime"
+                "lastLoginTime",
               ]);
 
               // Clear current user state
@@ -567,7 +581,7 @@ const handleRecalculatePrice = async (productId: string) => {
                 totalOrders: 0,
                 totalRevenue: 0,
                 totalCategories: 0,
-                totalConversations: 0
+                totalConversations: 0,
               });
               setProducts([]);
               setCategories([]);
@@ -581,15 +595,15 @@ const handleRecalculatePrice = async (productId: string) => {
               // Navigate to login screen
               navigation.reset({
                 index: 0,
-                routes: [{ name: "Login" as never }]
+                routes: [{ name: "Login" as never }],
               });
             } catch (error) {
               console.error("Error during admin logout:", error);
               setLoading(false);
               Alert.alert("Error", "Failed to logout. Please try again.");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -597,7 +611,7 @@ const handleRecalculatePrice = async (productId: string) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "VND"
+      currency: "VND",
     }).format(amount);
   };
 
@@ -625,13 +639,13 @@ const handleRecalculatePrice = async (productId: string) => {
     {
       id: "dashboard",
       title: "Dashboard",
-      icon: "speedometer-outline" as const
+      icon: "speedometer-outline" as const,
     },
     { id: "products", title: "Products", icon: "cube-outline" as const },
     { id: "categories", title: "Categories", icon: "grid-outline" as const },
     { id: "users", title: "Users", icon: "people-outline" as const },
     { id: "orders", title: "Orders", icon: "receipt-outline" as const },
-    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const }
+    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const },
   ];
 
   const renderTabButton = (tabId: string, title: string, icon: string) => (
@@ -639,7 +653,7 @@ const handleRecalculatePrice = async (productId: string) => {
       key={tabId}
       style={[
         styles.tabButton,
-        selectedTab === tabId && styles.activeTabButton
+        selectedTab === tabId && styles.activeTabButton,
       ]}
       onPress={() => setSelectedTab(tabId)}
     >
@@ -787,7 +801,7 @@ const handleRecalculatePrice = async (productId: string) => {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: getStatusColor(order.status) }
+                        { backgroundColor: getStatusColor(order.status) },
                       ]}
                     >
                       <Text style={styles.statusText}>{order.status}</Text>
@@ -900,7 +914,7 @@ const handleRecalculatePrice = async (productId: string) => {
               <View style={styles.categoryCard}>
                 <Image
                   source={{
-                    uri: item.image || "https://via.placeholder.com/80x80"
+                    uri: item.image || "https://via.placeholder.com/80x80",
                   }}
                   style={styles.categoryImage}
                 />
@@ -917,8 +931,10 @@ const handleRecalculatePrice = async (productId: string) => {
                       style={[
                         styles.statusBadge,
                         {
-                          backgroundColor: item.isActive ? "#27ae60" : "#6c757d"
-                        }
+                          backgroundColor: item.isActive
+                            ? "#27ae60"
+                            : "#6c757d",
+                        },
                       ]}
                     >
                       <Text style={styles.statusText}>
@@ -1008,9 +1024,20 @@ const handleRecalculatePrice = async (productId: string) => {
             onPress={() => openUserDetail(user)}
           >
             <View style={styles.userAvatar}>
-              <Text style={styles.userInitial}>
-                {user.fullName.charAt(0).toUpperCase()}
-              </Text>
+              <Image
+                source={{
+                  uri: user.avatar
+                    ? user.avatar
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=3b82f6&color=fff`,
+                }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: "#e5e7eb",
+                }}
+                resizeMode="cover"
+              />
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{user.fullName}</Text>
@@ -1021,7 +1048,7 @@ const handleRecalculatePrice = async (productId: string) => {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: user.isActive ? "#10b981" : "#ef4444" }
+                  { backgroundColor: user.isActive ? "#10b981" : "#ef4444" },
                 ]}
               >
                 <Text style={styles.statusText}>
@@ -1043,7 +1070,7 @@ const handleRecalculatePrice = async (productId: string) => {
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.3)"
+            backgroundColor: "rgba(0,0,0,0.3)",
           }}
         >
           <View
@@ -1051,17 +1078,44 @@ const handleRecalculatePrice = async (productId: string) => {
               backgroundColor: "#fff",
               borderRadius: 12,
               padding: 24,
-              width: "85%"
+              width: "85%",
             }}
           >
             {selectedUser && (
               <>
+                <View style={{ alignItems: "center", marginBottom: 12 }}>
+                  <Image
+                    source={{
+                      uri: avatarUri
+                        ? avatarUri
+                        : selectedUser.avatar
+                          ? selectedUser.avatar
+                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.fullName)}&background=3b82f6&color=fff`,
+                    }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 40,
+                      marginBottom: 8,
+                      borderWidth: 2,
+                      borderColor: "#e5e7eb",
+                      backgroundColor: "#f3f4f6",
+                    }}
+                    resizeMode="cover"
+                    onError={() => {
+                      if (!avatarUri) {
+                        setAvatarUri(
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.fullName)}&background=3b82f6&color=fff`
+                        );
+                      }
+                    }}
+                  />
+                </View>
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
                 >
                   {selectedUser.fullName}
                 </Text>
-                <Text>Username: {selectedUser.username || "-"}</Text>
                 <Text>Email: {selectedUser.email}</Text>
                 <Text>Role: {selectedUser.role}</Text>
                 <Text>Phone: {selectedUser.phone || "-"}</Text>
@@ -1082,7 +1136,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
-                    marginTop: 16
+                    marginTop: 16,
                   }}
                 >
                   <TouchableOpacity
@@ -1093,7 +1147,7 @@ const handleRecalculatePrice = async (productId: string) => {
                       backgroundColor: "#e5e7eb",
                       paddingVertical: 10,
                       borderRadius: 8,
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
                     <Text style={{ color: "#374151", fontWeight: "600" }}>
@@ -1109,7 +1163,7 @@ const handleRecalculatePrice = async (productId: string) => {
                         : "#10b981",
                       paddingVertical: 10,
                       borderRadius: 8,
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                     disabled={banLoading}
                   >
@@ -1182,7 +1236,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   uri:
                     item.image ||
                     item.images[0] ||
-                    "https://via.placeholder.com/80x80"
+                    "https://via.placeholder.com/80x80",
                 }}
                 style={styles.productImage}
               />
@@ -1203,7 +1257,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   <View
                     style={[
                       styles.statusBadge,
-                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" }
+                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" },
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1216,8 +1270,8 @@ const handleRecalculatePrice = async (productId: string) => {
                       {
                         backgroundColor: item.isPublished
                           ? "#1a1a1a"
-                          : "#6c757d"
-                      }
+                          : "#6c757d",
+                      },
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1227,19 +1281,29 @@ const handleRecalculatePrice = async (productId: string) => {
                 </View>
               </View>
               <View style={styles.productActions}>
-                <TouchableOpacity style={styles.actionIconButton} onPress={() => handleEditProduct(item)}>
+                <TouchableOpacity
+                  style={styles.actionIconButton}
+                  onPress={() => handleEditProduct(item)}
+                >
                   <Ionicons name="create" size={20} color="#1a1a1a" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionIconButton} onPress={() => {
-                  Alert.alert(
-                    "Delete Product",
-                    "Are you sure you want to delete this product?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      { text: "Delete", style: "destructive", onPress: () => handleDeleteProduct(item.id) },
-                    ]
-                  );
-                }}>
+                <TouchableOpacity
+                  style={styles.actionIconButton}
+                  onPress={() => {
+                    Alert.alert(
+                      "Delete Product",
+                      "Are you sure you want to delete this product?",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Delete",
+                          style: "destructive",
+                          onPress: () => handleDeleteProduct(item.id),
+                        },
+                      ]
+                    );
+                  }}
+                >
                   <Ionicons name="trash" size={20} color="#dc3545" />
                 </TouchableOpacity>
               </View>
@@ -1275,25 +1339,11 @@ const handleRecalculatePrice = async (productId: string) => {
 
   const openOrderDetail = (order: Order) => {
     setSelectedOrder(order);
-    setOrderStatusDraft(order.status);
     setOrderDetailVisible(true);
   };
   const closeOrderDetail = () => {
     setOrderDetailVisible(false);
     setSelectedOrder(null);
-  };
-  const handleChangeOrderStatus = async () => {
-    if (!selectedOrder) return;
-    try {
-      setLoading(true);
-      await adminService.updateOrderStatus(selectedOrder.id, orderStatusDraft);
-      await loadOrders();
-      closeOrderDetail();
-    } catch (e) {
-      Alert.alert("Error", "Failed to update order status");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const renderOrders = () => (
@@ -1343,7 +1393,7 @@ const handleRecalculatePrice = async (productId: string) => {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: getStatusColor(order.status) }
+                  { backgroundColor: getStatusColor(order.status) },
                 ]}
               >
                 <Text style={styles.statusText}>{order.status}</Text>
@@ -1361,97 +1411,13 @@ const handleRecalculatePrice = async (productId: string) => {
             <Text style={styles.orderDate}>Date: {order.createdAt}</Text>
           </TouchableOpacity>
         ))}
-      {/* Modal chi tiết order */}
-      <Modal
+      {/* Enhanced Order Details Modal */}
+      <OrderDetailsModal
         visible={orderDetailVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeOrderDetail}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.3)"
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              width: "85%"
-            }}
-          >
-            {selectedOrder && (
-              <>
-                <Text
-                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
-                >
-                  Order #{selectedOrder.orderNumber}
-                </Text>
-                <Text>
-                  Customer:{" "}
-                  {typeof selectedOrder.user === "string"
-                    ? selectedOrder.user
-                    : selectedOrder.user.fullName}
-                </Text>
-                <Text>Total: {formatCurrency(selectedOrder.totalPrice)}</Text>
-                <Text>Date: {selectedOrder.createdAt}</Text>
-                <Text>Status:</Text>
-                <Picker
-                  selectedValue={orderStatusDraft}
-                  onValueChange={setOrderStatusDraft}
-                  style={{ marginVertical: 8 }}
-                >
-                  <Picker.Item label="Pending" value="pending" />
-                  <Picker.Item label="Processing" value="processing" />
-                  <Picker.Item label="Delivered" value="delivered" />
-                  <Picker.Item label="Cancelled" value="cancelled" />
-                </Picker>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginTop: 16
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={closeOrderDetail}
-                    style={{
-                      flex: 1,
-                      marginRight: 8,
-                      backgroundColor: "#e5e7eb",
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ color: "#374151", fontWeight: "600" }}>
-                      Close
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleChangeOrderStatus}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#3b82f6",
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontWeight: "600" }}>
-                      Save
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        orderId={selectedOrder?.id || null}
+        onClose={closeOrderDetail}
+        onStatusUpdate={loadOrders}
+      />
     </ScrollView>
   );
 
@@ -1522,7 +1488,7 @@ const handleRecalculatePrice = async (productId: string) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   header: {
     backgroundColor: "#2d3748",
@@ -1535,23 +1501,23 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4
+    shadowRadius: 4,
   },
   headerLeft: {
-    flex: 1
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#d1d5db"
+    color: "#d1d5db",
   },
   logoutButton: {
-    padding: 8
+    padding: 8,
   },
   tabsContainer: {
     backgroundColor: "#ffffff",
@@ -1559,7 +1525,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-    maxHeight: 60
+    maxHeight: 60,
   },
   tabButton: {
     flexDirection: "row",
@@ -1569,36 +1535,36 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 20,
     backgroundColor: "#f3f4f6",
-    minWidth: 100
+    minWidth: 100,
   },
   activeTabButton: {
-    backgroundColor: "#3b82f6"
+    backgroundColor: "#3b82f6",
   },
   tabText: {
     marginLeft: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b7280"
+    color: "#6b7280",
   },
   activeTabText: {
-    color: "#ffffff"
+    color: "#ffffff",
   },
   content: {
     flex: 1,
-    padding: 16
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6b7280"
+    color: "#6b7280",
   },
   statsGrid: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   statsCard: {
     backgroundColor: "#ffffff",
@@ -1610,46 +1576,46 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   statsCardContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   statsCardLeft: {
-    flex: 1
+    flex: 1,
   },
   statsTitle: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4
+    marginBottom: 4,
   },
   statsValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   statsIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   quickActions: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginBottom: 16
+    marginBottom: 16,
   },
   actionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   actionButton: {
     backgroundColor: "#ffffff",
@@ -1661,13 +1627,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   actionText: {
     marginTop: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   searchContainer: {
     position: "relative",
@@ -1680,19 +1646,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: "#000000", // Black text color
-    paddingRight: 40 // Make space for clear button
+    paddingRight: 40, // Make space for clear button
   },
   clearButton: {
     position: "absolute",
     right: 12,
     top: 12,
-    padding: 8
+    padding: 8,
   },
   userCard: {
     backgroundColor: "#ffffff",
@@ -1705,7 +1671,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   userAvatar: {
     width: 50,
@@ -1714,45 +1680,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b82f6",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16
+    marginRight: 16,
   },
   userInitial: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ffffff"
+    color: "#ffffff",
   },
   userInfo: {
-    flex: 1
+    flex: 1,
   },
   userName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 2
+    marginBottom: 2,
   },
   userRole: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   userStatus: {
-    marginLeft: 16
+    marginLeft: 16,
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginBottom: 12
+    marginBottom: 12,
   },
   statusText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#ffffff",
-    textTransform: "uppercase"
+    textTransform: "uppercase",
   },
   productCard: {
     backgroundColor: "#ffffff",
@@ -1765,40 +1731,40 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   productImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 16
+    marginRight: 16,
   },
   productInfo: {
-    flex: 1
+    flex: 1,
   },
   productName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 2
+    marginBottom: 2,
   },
   productStock: {
     fontSize: 12,
     color: "#6b7280",
-    marginBottom: 2
+    marginBottom: 2,
   },
   productCategory: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   productStatus: {
-    marginLeft: 16
+    marginLeft: 16,
   },
   orderCard: {
     backgroundColor: "#ffffff",
@@ -1809,48 +1775,48 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12
+    marginBottom: 12,
   },
   orderNumber: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   orderUser: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4
+    marginBottom: 4,
   },
   orderPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 4
+    marginBottom: 4,
   },
   orderDate: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   contentContainer: {
     padding: 20,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 24,
-    paddingHorizontal: 4
+    paddingHorizontal: 4,
   },
   statCard: {
     backgroundColor: "#f8f9fa",
@@ -1865,32 +1831,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   statNumber: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginTop: 10
+    marginTop: 10,
   },
   statLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginTop: 4
+    marginTop: 4,
   },
   quickActionsContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   actionsGrid: {
-    gap: 12
+    gap: 12,
   },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12
+    marginBottom: 12,
   },
   recentOrdersContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   recentOrderCard: {
     backgroundColor: "#ffffff",
@@ -1901,7 +1867,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   viewAllButton: {
     flexDirection: "row",
@@ -1910,21 +1876,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#f3f4f6"
+    backgroundColor: "#f3f4f6",
   },
   viewAllText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1f2937",
-    marginRight: 8
+    marginRight: 8,
   },
   revenueAnalyticsContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   revenueGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   revenueCard: {
     backgroundColor: "#ffffff",
@@ -1937,39 +1903,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   revenueLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 8
+    marginBottom: 8,
   },
   revenueValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: 40
+    paddingVertical: 40,
   },
   emptyStateText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#95a5a6"
+    color: "#95a5a6",
   },
   // Additional styles for new components
   sectionContainer: {
     display: "flex",
     flex: 1,
     backgroundColor: "#ffffff",
-    padding: 16
+    padding: 16,
   },
   sectionHeader: {
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20
+    marginBottom: 20,
   },
   addButton: {
     backgroundColor: "#1a1a1a",
@@ -1977,38 +1943,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8
+    borderRadius: 8,
   },
   addButtonText: {
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
-    marginLeft: 8
+    marginLeft: 8,
   },
   productDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20
+    lineHeight: 20,
   },
   productMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8
+    marginBottom: 8,
   },
   productActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   actionIconButton: {
     backgroundColor: "#f8f9fa",
     padding: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   categoryCard: {
     backgroundColor: "#ffffff",
@@ -2023,82 +1989,82 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   categoryImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
     marginRight: 16,
-    backgroundColor: "#f3f4f6"
+    backgroundColor: "#f3f4f6",
   },
   categoryInfo: {
-    flex: 1
+    flex: 1,
   },
   categoryName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   categoryDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20
+    lineHeight: 20,
   },
   categoryMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   categoryProductCount: {
     fontSize: 14,
     color: "#6c757d",
-    fontWeight: "500"
+    fontWeight: "500",
   },
   categoryActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   userPhone: {
     fontSize: 14,
     color: "#6c757d",
-    marginBottom: 4
+    marginBottom: 4,
   },
   userMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8
+    gap: 8,
   },
   userRoleBadge: {
     backgroundColor: "#e9ecef",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12
+    borderRadius: 12,
   },
   userRoleText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#495057",
-    textTransform: "capitalize"
+    textTransform: "capitalize",
   },
   userActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   listContainer: {
-    paddingBottom: 20
+    paddingBottom: 20,
   },
   orderTotal: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#10b981"
-  }
+    color: "#10b981",
+  },
 });
 
 export default AdminDashboard;
