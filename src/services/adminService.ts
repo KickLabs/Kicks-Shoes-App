@@ -16,6 +16,7 @@ interface ApiUser {
   email: string;
   role: string;
   isActive: boolean;
+  status: boolean; // Thêm dòng này để đồng bộ với backend
   createdAt: string;
   avatar?: string;
   phone?: string;
@@ -89,7 +90,7 @@ const getAuthHeaders = async () => {
 
   return {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
+    Authorization: `Bearer ${token}`
   };
 };
 
@@ -101,7 +102,7 @@ export const getAdminStats = async (): Promise<DashboardStats> => {
 
     const response = await fetch(`${API_BASE_URL}/api/dashboard/admin/stats`, {
       method: "GET",
-      headers,
+      headers
     });
 
     if (!response.ok) {
@@ -120,7 +121,7 @@ export const getAdminStats = async (): Promise<DashboardStats> => {
       totalOrders: data.totalOrders || 0,
       totalRevenue: data.totalRevenue || 0,
       totalCategories: data.totalCategories || 0,
-      totalConversations: data.totalConversations || 0,
+      totalConversations: data.totalConversations || 0
     };
   } catch (error) {
     console.error("[AdminService] Error fetching admin stats:", error);
@@ -136,7 +137,7 @@ export const getAdminUsers = async (): Promise<ApiUser[]> => {
 
     const response = await fetch(`${API_BASE_URL}/api/dashboard/admin/users`, {
       method: "GET",
-      headers,
+      headers
     });
 
     if (!response.ok) {
@@ -165,7 +166,7 @@ export const getAdminProducts = async (): Promise<ApiProduct[]> => {
 
     const response = await fetch(`${API_BASE_URL}/api/products`, {
       method: "GET",
-      headers,
+      headers
     });
 
     if (!response.ok) {
@@ -186,6 +187,85 @@ export const getAdminProducts = async (): Promise<ApiProduct[]> => {
   }
 };
 
+export const createProduct = async (productData: any) => {
+  const token = await AsyncStorage.getItem("accessToken");  // Lấy token từ AsyncStorage
+  const response = await fetch(`${API_BASE_URL}/api/products/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,  // Thêm Authorization header
+    },
+    body: JSON.stringify(productData),  // Gửi dữ liệu sản phẩm
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product created:", result);
+  return result.data;
+};
+
+export const updateProduct = async (productId: string, updatedData: any) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updatedData),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product updated:", result);
+  return result.data;
+};
+
+export const deleteProduct = async (productId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}/delete`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product deleted:", result);
+  return result.data;
+};
+
+export const recalculatePrice = async (productId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}/recalculate-price`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Recalculated price:", result);
+  return result.data;
+};
+
+
 // Get All Categories
 export const getAdminCategories = async (): Promise<ApiCategory[]> => {
   try {
@@ -196,7 +276,7 @@ export const getAdminCategories = async (): Promise<ApiCategory[]> => {
       `${API_BASE_URL}/api/dashboard/admin/categories`,
       {
         method: "GET",
-        headers,
+        headers
       }
     );
 
@@ -228,7 +308,7 @@ export const getAdminOrders = async (): Promise<ApiOrder[]> => {
       `${API_BASE_URL}/api/orders?limit=100`, // Use orders endpoint with limit
       {
         method: "GET",
-        headers,
+        headers
       }
     );
 
@@ -250,39 +330,21 @@ export const getAdminOrders = async (): Promise<ApiOrder[]> => {
   }
 };
 
-// Ban/Unban User
-export const toggleUserStatus = async (
-  userId: string,
-  shouldBan: boolean
-): Promise<void> => {
+// Toggle User Status (ban/unban)
+export const toggleUserStatus = async (userId: string): Promise<void> => {
   try {
-    console.log(
-      `[AdminService] ${shouldBan ? "Banning" : "Unbanning"} user:`,
-      userId
-    );
+    console.log("[AdminService] Toggling user status:", userId);
     const headers = await getAuthHeaders();
-
-    const endpoint = shouldBan
-      ? `${API_BASE_URL}/api/dashboard/admin/users/${userId}/ban`
-      : `${API_BASE_URL}/api/dashboard/admin/users/${userId}/unban`;
-
-    const response = await fetch(endpoint, {
-      method: "PUT",
-      headers,
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/status`, {
+      method: "PATCH",
+      headers
     });
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    console.log(
-      `[AdminService] User ${shouldBan ? "banned" : "unbanned"} successfully`
-    );
+    console.log("[AdminService] User status toggled successfully");
   } catch (error) {
-    console.error(
-      `[AdminService] Error ${shouldBan ? "banning" : "unbanning"} user:`,
-      error
-    );
+    console.error("[AdminService] Error toggling user status:", error);
     throw error;
   }
 };
@@ -301,7 +363,7 @@ export const createCategory = async (categoryData: {
       {
         method: "POST",
         headers,
-        body: JSON.stringify(categoryData),
+        body: JSON.stringify(categoryData)
       }
     );
 
@@ -337,7 +399,7 @@ export const updateCategory = async (
       {
         method: "PUT",
         headers,
-        body: JSON.stringify(categoryData),
+        body: JSON.stringify(categoryData)
       }
     );
 
@@ -365,7 +427,7 @@ export const deleteCategory = async (categoryId: string): Promise<void> => {
       `${API_BASE_URL}/api/dashboard/admin/categories/${categoryId}`,
       {
         method: "DELETE",
-        headers,
+        headers
       }
     );
 
@@ -398,7 +460,7 @@ export const toggleCategoryStatus = async (
 
     const response = await fetch(endpoint, {
       method: "PUT",
-      headers,
+      headers
     });
 
     if (!response.ok) {
@@ -413,6 +475,29 @@ export const toggleCategoryStatus = async (
       `[AdminService] Error ${shouldActivate ? "activating" : "deactivating"} category:`,
       error
     );
+    throw error;
+  }
+};
+
+// Update Order Status
+export const updateOrderStatus = async (
+  orderId: string,
+  status: string
+): Promise<void> => {
+  try {
+    console.log("[AdminService] Updating order status:", orderId, status);
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ status })
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    console.log("[AdminService] Order status updated successfully");
+  } catch (error) {
+    console.error("[AdminService] Error updating order status:", error);
     throw error;
   }
 };
