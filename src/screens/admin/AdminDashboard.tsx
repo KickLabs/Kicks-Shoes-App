@@ -435,7 +435,7 @@ const AdminDashboard: React.FC = () => {
         id: category._id,
         name: category.name || "Unknown Category",
         description: category.description || "",
-        productCount: category.productCount || 0,
+        productCount: category.productsCount || 0, // Sửa lại đúng trường backend trả về
         status: category.status || false,
         isActive: category.isActive, // Nếu cần dùng cho UI cũ
         image:
@@ -1211,21 +1211,12 @@ const AdminDashboard: React.FC = () => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <View style={styles.categoryCard}>
-              <Image
-                source={{
-                  uri: item.image || "https://via.placeholder.com/80x80",
-                }}
-                style={styles.categoryImage}
-              />
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryName}>{item.name}</Text>
                 <Text style={styles.categoryDescription} numberOfLines={2}>
                   {item.description}
                 </Text>
                 <View style={styles.categoryMeta}>
-                  <Text style={styles.categoryProductCount}>
-                    {item.productCount} products
-                  </Text>
                   <TouchableOpacity
                     onPress={() =>
                       handleToggleCategoryStatus(item.id, item.status)
