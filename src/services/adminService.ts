@@ -57,6 +57,7 @@ interface ApiCategory {
   description: string;
   image: string;
   isActive: boolean;
+  status: boolean; // Add status field to match what we need
   productCount?: number;
   createdAt: string;
 }
@@ -391,6 +392,7 @@ export const updateCategory = async (
     name?: string;
     description?: string;
     image?: string;
+    status?: boolean;  // Add status parameter
   }
 ): Promise<ApiCategory> => {
   try {
