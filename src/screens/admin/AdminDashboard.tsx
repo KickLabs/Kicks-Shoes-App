@@ -18,8 +18,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Image as RNImage,
 } from "react-native";
 import ProductDetails from "../../components/common/ProductDetails";
+import OrderDetailsModal from "../../components/admin/OrderDetailsModal";
 import * as adminService from "../../services/adminService";
 import { Picker } from "@react-native-picker/picker";
 
@@ -99,7 +101,7 @@ const AdminDashboard: React.FC = () => {
     totalOrders: 0,
     totalRevenue: 0,
     totalCategories: 0,
-    totalConversations: 0
+    totalConversations: 0,
   });
 
   const [users, setUsers] = useState<User[]>([]);
@@ -108,13 +110,15 @@ const AdminDashboard: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailVisible, setOrderDetailVisible] = useState(false);
-  const [orderStatusDraft, setOrderStatusDraft] = useState<string>("");
+
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userDetailVisible, setUserDetailVisible] = useState(false);
   const [banLoading, setBanLoading] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // Thêm state cho fallback avatar
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   // Move category management state to component level
   const [newCategory, setNewCategory] = useState({
     name: "",
@@ -123,7 +127,9 @@ const AdminDashboard: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -137,6 +143,10 @@ const AdminDashboard: React.FC = () => {
     return () => clearTimeout(timer);
   }, [selectedTab]);
 
+  useEffect(() => {
+    setAvatarUri(null);
+  }, [selectedUser]);
+
   const loadUserInfo = async () => {
     try {
       const userInfo = await AsyncStorage.getItem("userInfo");
@@ -145,7 +155,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] Debug token check:", {
         hasUserInfo: !!userInfo,
         hasToken: !!token,
-        tokenLength: token?.length || 0
+        tokenLength: token?.length || 0,
       });
 
       if (userInfo) {
@@ -203,8 +213,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert(
@@ -235,7 +245,7 @@ const AdminDashboard: React.FC = () => {
           user.avatar ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=3b82f6&color=fff`,
         phone: user.phone,
-        address: user.address
+        address: user.address,
       }));
 
       setUsers(mappedUsers);
@@ -246,8 +256,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load users. Please try again.");
@@ -306,7 +316,7 @@ const AdminDashboard: React.FC = () => {
           isPublished: product.status || product.isPublished || false,
           images: product.images || [],
           image:
-            product.mainImage || (product.images && product.images[0]) || ""
+            product.mainImage || (product.images && product.images[0]) || "",
         };
       });
 
@@ -315,7 +325,7 @@ const AdminDashboard: React.FC = () => {
       console.log("[AdminDashboard] First product image data:", {
         mainImage: apiProducts[0]?.mainImage,
         images: apiProducts[0]?.images,
-        mappedImage: mappedProducts[0]?.image
+        mappedImage: mappedProducts[0]?.image,
       });
     } catch (error: any) {
       console.error("Error loading products:", error);
@@ -323,8 +333,8 @@ const AdminDashboard: React.FC = () => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load products. Please try again.");
@@ -336,61 +346,66 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleCreateProduct = async (newProductData: Product) => {
-  setLoading(true);
-  try {
-    const createdProduct = await adminService.createProduct(newProductData);
-    Alert.alert("Success", "Product created successfully");
-    loadProducts();  // Reload products after creation
-  } catch (error) {
-    console.error("Error creating product:", error);
-    Alert.alert("Error", "Failed to create product");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const createdProduct = await adminService.createProduct(newProductData);
+      Alert.alert("Success", "Product created successfully");
+      loadProducts(); // Reload products after creation
+    } catch (error) {
+      console.error("Error creating product:", error);
+      Alert.alert("Error", "Failed to create product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleUpdateProduct = async (productId: string, updatedData: Product) => {
-  setLoading(true);
-  try {
-    const updatedProduct = await adminService.updateProduct(productId, updatedData);
-    Alert.alert("Success", "Product updated successfully");
-    loadProducts();  // Reload products after update
-  } catch (error) {
-    console.error("Error updating product:", error);
-    Alert.alert("Error", "Failed to update product");
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleUpdateProduct = async (
+    productId: string,
+    updatedData: Product
+  ) => {
+    setLoading(true);
+    try {
+      const updatedProduct = await adminService.updateProduct(
+        productId,
+        updatedData
+      );
+      Alert.alert("Success", "Product updated successfully");
+      loadProducts(); // Reload products after update
+    } catch (error) {
+      console.error("Error updating product:", error);
+      Alert.alert("Error", "Failed to update product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeleteProduct = async (productId: string) => {
-  setLoading(true);
-  try {
-    await adminService.deleteProduct(productId);
-    Alert.alert("Success", "Product deleted successfully");
-    loadProducts();  // Reload products after deletion
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    Alert.alert("Error", "Failed to delete product");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await adminService.deleteProduct(productId);
+      Alert.alert("Success", "Product deleted successfully");
+      loadProducts(); // Reload products after deletion
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Alert.alert("Error", "Failed to delete product");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleRecalculatePrice = async (productId: string) => {
-  setLoading(true);
-  try {
-    await adminService.recalculatePrice(productId);
-    Alert.alert("Success", "Price recalculated successfully");
-    loadProducts();  // Reload products after recalculation
-  } catch (error) {
-    console.error("Error recalculating price:", error);
-    Alert.alert("Error", "Failed to recalculate price");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const handleRecalculatePrice = async (productId: string) => {
+    setLoading(true);
+    try {
+      await adminService.recalculatePrice(productId);
+      Alert.alert("Success", "Price recalculated successfully");
+      loadProducts(); // Reload products after recalculation
+    } catch (error) {
+      console.error("Error recalculating price:", error);
+      Alert.alert("Error", "Failed to recalculate price");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadCategories = async () => {
     try {
@@ -420,8 +435,12 @@ const handleRecalculatePrice = async (productId: string) => {
         id: category._id,
         name: category.name || "Unknown Category",
         description: category.description || "",
-        productCount: category.productCount || 0,
+        productCount: category.productsCount || 0, // Sửa lại đúng trường backend trả về
         status: category.status || false,
+        isActive: category.isActive, // Nếu cần dùng cho UI cũ
+        image:
+          category.image ||
+          `https://via.placeholder.com/80x80/3b82f6/ffffff?text=${encodeURIComponent((category.name || "C").charAt(0))}`,
       }));
 
       setCategories(mappedCategories);
@@ -435,8 +454,8 @@ const handleRecalculatePrice = async (productId: string) => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load categories. Please try again.");
@@ -460,7 +479,7 @@ const handleRecalculatePrice = async (productId: string) => {
         name: newCategory.name,
         description: newCategory.description,
       });
-      
+
       setIsModalVisible(false);
       setNewCategory({ name: "", description: "" });
       Alert.alert("Success", "Category created successfully");
@@ -489,18 +508,18 @@ const handleRecalculatePrice = async (productId: string) => {
         id: editingCategory.id,
         name: editingCategory.name,
         description: editingCategory.description,
-        status: editingCategory.status
+        status: editingCategory.status,
       });
 
       // Update all information including status
       const result = await adminService.updateCategory(editingCategory.id, {
         name: editingCategory.name,
         description: editingCategory.description,
-        status: editingCategory.status
+        status: editingCategory.status,
       });
-      
+
       console.log("[AdminDashboard] Update result:", result);
-      
+
       setIsModalVisible(false);
       setEditingCategory(null);
       Alert.alert("Success", "Category updated successfully");
@@ -521,7 +540,7 @@ const handleRecalculatePrice = async (productId: string) => {
     setIsSubmitting(true);
     try {
       await adminService.deleteCategory(selectedCategoryId);
-      
+
       setIsDeleteModalVisible(false);
       setSelectedCategoryId(null);
       Alert.alert("Success", "Category deleted successfully");
@@ -534,18 +553,24 @@ const handleRecalculatePrice = async (productId: string) => {
     }
   };
 
-  const handleToggleCategoryStatus = async (categoryId: string, currentStatus: boolean) => {
+  const handleToggleCategoryStatus = async (
+    categoryId: string,
+    currentStatus: boolean
+  ) => {
     try {
       console.log("[AdminDashboard] Toggle status called with:", {
         categoryId,
         currentStatus: currentStatus,
-        willChangeTo: !currentStatus
+        willChangeTo: !currentStatus,
       });
-      
+
       // If currentStatus = true, we want to deactivate (shouldActivate = false)
       // If currentStatus = false, we want to activate (shouldActivate = true)
       await adminService.toggleCategoryStatus(categoryId, !currentStatus);
-      Alert.alert("Success", `Category ${!currentStatus ? "activated" : "deactivated"} successfully`);
+      Alert.alert(
+        "Success",
+        `Category ${!currentStatus ? "activated" : "deactivated"} successfully`
+      );
       loadCategories(); // Refresh the list
     } catch (error: any) {
       console.error("[AdminDashboard] Error toggling category status:", error);
@@ -589,7 +614,7 @@ const handleRecalculatePrice = async (productId: string) => {
         status: order.status || "pending",
         createdAt: order.createdAt
           ? new Date(order.createdAt).toLocaleDateString("vi-VN")
-          : new Date().toLocaleDateString("vi-VN")
+          : new Date().toLocaleDateString("vi-VN"),
       }));
 
       setOrders(mappedOrders);
@@ -600,8 +625,8 @@ const handleRecalculatePrice = async (productId: string) => {
         Alert.alert("Authentication Error", "Please login again.", [
           {
             text: "OK",
-            onPress: () => navigation.navigate("Login" as never)
-          }
+            onPress: () => navigation.navigate("Login" as never),
+          },
         ]);
       } else {
         Alert.alert("Error", "Failed to load orders. Please try again.");
@@ -668,7 +693,7 @@ const handleRecalculatePrice = async (productId: string) => {
                 "userInfo",
                 "refreshToken",
                 "adminSession",
-                "lastLoginTime"
+                "lastLoginTime",
               ]);
 
               // Clear current user state
@@ -681,7 +706,7 @@ const handleRecalculatePrice = async (productId: string) => {
                 totalOrders: 0,
                 totalRevenue: 0,
                 totalCategories: 0,
-                totalConversations: 0
+                totalConversations: 0,
               });
               setProducts([]);
               setCategories([]);
@@ -695,15 +720,15 @@ const handleRecalculatePrice = async (productId: string) => {
               // Navigate to login screen
               navigation.reset({
                 index: 0,
-                routes: [{ name: "Login" as never }]
+                routes: [{ name: "Login" as never }],
               });
             } catch (error) {
               console.error("Error during admin logout:", error);
               setLoading(false);
               Alert.alert("Error", "Failed to logout. Please try again.");
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -711,7 +736,7 @@ const handleRecalculatePrice = async (productId: string) => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
-      currency: "VND"
+      currency: "VND",
     }).format(amount);
   };
 
@@ -739,13 +764,13 @@ const handleRecalculatePrice = async (productId: string) => {
     {
       id: "dashboard",
       title: "Dashboard",
-      icon: "speedometer-outline" as const
+      icon: "speedometer-outline" as const,
     },
     { id: "products", title: "Products", icon: "cube-outline" as const },
     { id: "categories", title: "Categories", icon: "grid-outline" as const },
     { id: "users", title: "Users", icon: "people-outline" as const },
     { id: "orders", title: "Orders", icon: "receipt-outline" as const },
-    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const }
+    { id: "analytics", title: "Analytics", icon: "analytics-outline" as const },
   ];
 
   const renderTabButton = (tabId: string, title: string, icon: string) => (
@@ -753,7 +778,7 @@ const handleRecalculatePrice = async (productId: string) => {
       key={tabId}
       style={[
         styles.tabButton,
-        selectedTab === tabId && styles.activeTabButton
+        selectedTab === tabId && styles.activeTabButton,
       ]}
       onPress={() => setSelectedTab(tabId)}
     >
@@ -901,7 +926,7 @@ const handleRecalculatePrice = async (productId: string) => {
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: getStatusColor(order.status) }
+                        { backgroundColor: getStatusColor(order.status) },
                       ]}
                     >
                       <Text style={styles.statusText}>{order.status}</Text>
@@ -980,33 +1005,37 @@ const handleRecalculatePrice = async (productId: string) => {
           <Text style={styles.modalTitle}>
             {editingCategory ? "Edit Category" : "Create New Category"}
           </Text>
-          
+
           <Text style={styles.inputLabel}>Name</Text>
           <TextInput
             style={styles.textInput}
             placeholder="Category name"
             value={editingCategory ? editingCategory.name : newCategory.name}
-            onChangeText={(text) => 
-              editingCategory 
-                ? setEditingCategory({...editingCategory, name: text})
-                : setNewCategory({...newCategory, name: text})
+            onChangeText={(text) =>
+              editingCategory
+                ? setEditingCategory({ ...editingCategory, name: text })
+                : setNewCategory({ ...newCategory, name: text })
             }
           />
-          
+
           <Text style={styles.inputLabel}>Description</Text>
           <TextInput
             style={[styles.textInput, styles.textAreaInput]}
             placeholder="Category description"
             multiline={true}
             numberOfLines={4}
-            value={editingCategory ? editingCategory.description : newCategory.description}
-            onChangeText={(text) => 
-              editingCategory 
-                ? setEditingCategory({...editingCategory, description: text})
-                : setNewCategory({...newCategory, description: text})
+            value={
+              editingCategory
+                ? editingCategory.description
+                : newCategory.description
+            }
+            onChangeText={(text) =>
+              editingCategory
+                ? setEditingCategory({ ...editingCategory, description: text })
+                : setNewCategory({ ...newCategory, description: text })
             }
           />
-          
+
           {editingCategory && (
             <View style={styles.statusToggleContainer}>
               <Text style={styles.inputLabel}>Status</Text>
@@ -1016,29 +1045,42 @@ const handleRecalculatePrice = async (productId: string) => {
                     styles.statusToggleButton,
                     editingCategory.status && styles.statusToggleActive,
                   ]}
-                  onPress={() => setEditingCategory({...editingCategory, status: true})}
+                  onPress={() =>
+                    setEditingCategory({ ...editingCategory, status: true })
+                  }
                 >
-                  <Text style={[
-                    styles.statusToggleText,
-                    editingCategory.status && styles.statusToggleActiveText,
-                  ]}>Active</Text>
+                  <Text
+                    style={[
+                      styles.statusToggleText,
+                      editingCategory.status && styles.statusToggleActiveText,
+                    ]}
+                  >
+                    Active
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[
                     styles.statusToggleButton,
                     !editingCategory.status && styles.statusToggleInactive,
                   ]}
-                  onPress={() => setEditingCategory({...editingCategory, status: false})}
+                  onPress={() =>
+                    setEditingCategory({ ...editingCategory, status: false })
+                  }
                 >
-                  <Text style={[
-                    styles.statusToggleText,
-                    !editingCategory.status && styles.statusToggleInactiveText,
-                  ]}>Inactive</Text>
+                  <Text
+                    style={[
+                      styles.statusToggleText,
+                      !editingCategory.status &&
+                        styles.statusToggleInactiveText,
+                    ]}
+                  >
+                    Inactive
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
-          
+
           <View style={styles.modalActions}>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
@@ -1051,10 +1093,12 @@ const handleRecalculatePrice = async (productId: string) => {
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.modalButton, styles.saveButton]}
-              onPress={editingCategory ? handleUpdateCategory : handleCreateCategory}
+              onPress={
+                editingCategory ? handleUpdateCategory : handleCreateCategory
+              }
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -1085,9 +1129,10 @@ const handleRecalculatePrice = async (productId: string) => {
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Confirm Delete</Text>
           <Text style={styles.modalText}>
-            Are you sure you want to delete this category? This action cannot be undone.
+            Are you sure you want to delete this category? This action cannot be
+            undone.
           </Text>
-          
+
           <View style={styles.modalActions}>
             <TouchableOpacity
               style={[styles.modalButton, styles.cancelButton]}
@@ -1099,7 +1144,7 @@ const handleRecalculatePrice = async (productId: string) => {
             >
               <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.modalButton, styles.deleteButton]}
               onPress={handleDeleteCategory}
@@ -1118,10 +1163,10 @@ const handleRecalculatePrice = async (productId: string) => {
   );
 
   const renderCategories = () => (
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories Management</Text>
-        <TouchableOpacity 
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Categories Management</Text>
+        <TouchableOpacity
           style={styles.addButton}
           onPress={() => {
             setEditingCategory(null);
@@ -1129,62 +1174,59 @@ const handleRecalculatePrice = async (productId: string) => {
             setIsModalVisible(true);
           }}
         >
-            <Ionicons name="add" size={20} color="#fff" />
-            <Text style={styles.addButtonText}>Add Category</Text>
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={styles.addButtonText}>Add Category</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search categories..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#6c757d"
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSearchQuery("")}
+          >
+            <Ionicons name="close-circle" size={20} color="#6b7280" />
           </TouchableOpacity>
-        </View>
+        )}
+      </View>
 
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search categories..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#6c757d"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => setSearchQuery("")}
-            >
-              <Ionicons name="close-circle" size={20} color="#6b7280" />
-            </TouchableOpacity>
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#1a1a1a"
+          style={{ marginVertical: 20 }}
+        />
+      ) : (
+        <FlatList
+          data={categories.filter((category) =>
+            category.name.toLowerCase().includes(searchQuery.toLowerCase())
           )}
-        </View>
-
-        {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#1a1a1a"
-            style={{ marginVertical: 20 }}
-          />
-        ) : (
-          <FlatList
-            data={categories.filter((category) =>
-              category.name.toLowerCase().includes(searchQuery.toLowerCase())
-            )}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.categoryCard}>
-                <View style={styles.categoryInfo}>
-                  <Text style={styles.categoryName}>{item.name}</Text>
-                  <Text style={styles.categoryDescription} numberOfLines={2}>
-                    {item.description}
-                  </Text>
-                  <View style={styles.categoryMeta}>
-                    <Text style={styles.categoryProductCount}>
-                      {item.productCount} products
-                    </Text>
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.categoryCard}>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryName}>{item.name}</Text>
+                <Text style={styles.categoryDescription} numberOfLines={2}>
+                  {item.description}
+                </Text>
+                <View style={styles.categoryMeta}>
                   <TouchableOpacity
-                    onPress={() => handleToggleCategoryStatus(item.id, item.status)}
+                    onPress={() =>
+                      handleToggleCategoryStatus(item.id, item.status)
+                    }
                   >
                     <View
                       style={[
                         styles.statusBadge,
                         {
-                          backgroundColor: item.status
-                            ? "#27ae60"
-                            : "#6c757d",
+                          backgroundColor: item.status ? "#27ae60" : "#6c757d",
                         },
                       ]}
                     >
@@ -1193,42 +1235,42 @@ const handleRecalculatePrice = async (productId: string) => {
                       </Text>
                     </View>
                   </TouchableOpacity>
-                  </View>
                 </View>
-                <View style={styles.categoryActions}>
-                <TouchableOpacity 
+              </View>
+              <View style={styles.categoryActions}>
+                <TouchableOpacity
                   style={styles.actionIconButton}
                   onPress={() => {
                     setEditingCategory(item);
                     setIsModalVisible(true);
                   }}
                 >
-                    <Ionicons name="create" size={20} color="#1a1a1a" />
-                  </TouchableOpacity>
-                <TouchableOpacity 
+                  <Ionicons name="create" size={20} color="#1a1a1a" />
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={styles.actionIconButton}
                   onPress={() => {
                     setSelectedCategoryId(item.id);
                     setIsDeleteModalVisible(true);
                   }}
                 >
-                    <Ionicons name="trash" size={20} color="#dc3545" />
-                  </TouchableOpacity>
-                </View>
+                  <Ionicons name="trash" size={20} color="#dc3545" />
+                </TouchableOpacity>
               </View>
-            )}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContainer}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }
-          />
-        )}
+            </View>
+          )}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
 
       {renderCategoryModal()}
       {renderDeleteModal()}
-      </View>
-    );
+    </View>
+  );
 
   const openUserDetail = (user: User) => {
     setSelectedUser(user);
@@ -1290,9 +1332,20 @@ const handleRecalculatePrice = async (productId: string) => {
             onPress={() => openUserDetail(user)}
           >
             <View style={styles.userAvatar}>
-              <Text style={styles.userInitial}>
-                {user.fullName.charAt(0).toUpperCase()}
-              </Text>
+              <Image
+                source={{
+                  uri: user.avatar
+                    ? user.avatar
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=3b82f6&color=fff`,
+                }}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: "#e5e7eb",
+                }}
+                resizeMode="cover"
+              />
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{user.fullName}</Text>
@@ -1303,7 +1356,7 @@ const handleRecalculatePrice = async (productId: string) => {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: user.isActive ? "#10b981" : "#ef4444" }
+                  { backgroundColor: user.isActive ? "#10b981" : "#ef4444" },
                 ]}
               >
                 <Text style={styles.statusText}>
@@ -1325,7 +1378,7 @@ const handleRecalculatePrice = async (productId: string) => {
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.3)"
+            backgroundColor: "rgba(0,0,0,0.3)",
           }}
         >
           <View
@@ -1333,17 +1386,44 @@ const handleRecalculatePrice = async (productId: string) => {
               backgroundColor: "#fff",
               borderRadius: 12,
               padding: 24,
-              width: "85%"
+              width: "85%",
             }}
           >
             {selectedUser && (
               <>
+                <View style={{ alignItems: "center", marginBottom: 12 }}>
+                  <Image
+                    source={{
+                      uri: avatarUri
+                        ? avatarUri
+                        : selectedUser.avatar
+                          ? selectedUser.avatar
+                          : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.fullName)}&background=3b82f6&color=fff`,
+                    }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 40,
+                      marginBottom: 8,
+                      borderWidth: 2,
+                      borderColor: "#e5e7eb",
+                      backgroundColor: "#f3f4f6",
+                    }}
+                    resizeMode="cover"
+                    onError={() => {
+                      if (!avatarUri) {
+                        setAvatarUri(
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.fullName)}&background=3b82f6&color=fff`
+                        );
+                      }
+                    }}
+                  />
+                </View>
                 <Text
                   style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
                 >
                   {selectedUser.fullName}
                 </Text>
-                <Text>Username: {selectedUser.username || "-"}</Text>
                 <Text>Email: {selectedUser.email}</Text>
                 <Text>Role: {selectedUser.role}</Text>
                 <Text>Phone: {selectedUser.phone || "-"}</Text>
@@ -1364,7 +1444,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   style={{
                     flexDirection: "row",
                     justifyContent: "space-between",
-                    marginTop: 16
+                    marginTop: 16,
                   }}
                 >
                   <TouchableOpacity
@@ -1375,7 +1455,7 @@ const handleRecalculatePrice = async (productId: string) => {
                       backgroundColor: "#e5e7eb",
                       paddingVertical: 10,
                       borderRadius: 8,
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                   >
                     <Text style={{ color: "#374151", fontWeight: "600" }}>
@@ -1391,7 +1471,7 @@ const handleRecalculatePrice = async (productId: string) => {
                         : "#10b981",
                       paddingVertical: 10,
                       borderRadius: 8,
-                      alignItems: "center"
+                      alignItems: "center",
                     }}
                     disabled={banLoading}
                   >
@@ -1464,7 +1544,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   uri:
                     item.image ||
                     item.images[0] ||
-                    "https://via.placeholder.com/80x80"
+                    "https://via.placeholder.com/80x80",
                 }}
                 style={styles.productImage}
               />
@@ -1485,7 +1565,7 @@ const handleRecalculatePrice = async (productId: string) => {
                   <View
                     style={[
                       styles.statusBadge,
-                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" }
+                      { backgroundColor: item.inStock ? "#27ae60" : "#6c757d" },
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1498,8 +1578,8 @@ const handleRecalculatePrice = async (productId: string) => {
                       {
                         backgroundColor: item.isPublished
                           ? "#1a1a1a"
-                          : "#6c757d"
-                      }
+                          : "#6c757d",
+                      },
                     ]}
                   >
                     <Text style={styles.statusText}>
@@ -1509,19 +1589,29 @@ const handleRecalculatePrice = async (productId: string) => {
                 </View>
               </View>
               <View style={styles.productActions}>
-                <TouchableOpacity style={styles.actionIconButton} onPress={() => handleEditProduct(item)}>
+                <TouchableOpacity
+                  style={styles.actionIconButton}
+                  onPress={() => handleEditProduct(item)}
+                >
                   <Ionicons name="create" size={20} color="#1a1a1a" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionIconButton} onPress={() => {
-                  Alert.alert(
-                    "Delete Product",
-                    "Are you sure you want to delete this product?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      { text: "Delete", style: "destructive", onPress: () => handleDeleteProduct(item.id) },
-                    ]
-                  );
-                }}>
+                <TouchableOpacity
+                  style={styles.actionIconButton}
+                  onPress={() => {
+                    Alert.alert(
+                      "Delete Product",
+                      "Are you sure you want to delete this product?",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Delete",
+                          style: "destructive",
+                          onPress: () => handleDeleteProduct(item.id),
+                        },
+                      ]
+                    );
+                  }}
+                >
                   <Ionicons name="trash" size={20} color="#dc3545" />
                 </TouchableOpacity>
               </View>
@@ -1557,25 +1647,11 @@ const handleRecalculatePrice = async (productId: string) => {
 
   const openOrderDetail = (order: Order) => {
     setSelectedOrder(order);
-    setOrderStatusDraft(order.status);
     setOrderDetailVisible(true);
   };
   const closeOrderDetail = () => {
     setOrderDetailVisible(false);
     setSelectedOrder(null);
-  };
-  const handleChangeOrderStatus = async () => {
-    if (!selectedOrder) return;
-    try {
-      setLoading(true);
-      await adminService.updateOrderStatus(selectedOrder.id, orderStatusDraft);
-      await loadOrders();
-      closeOrderDetail();
-    } catch (e) {
-      Alert.alert("Error", "Failed to update order status");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const renderOrders = () => (
@@ -1625,7 +1701,7 @@ const handleRecalculatePrice = async (productId: string) => {
               <View
                 style={[
                   styles.statusBadge,
-                  { backgroundColor: getStatusColor(order.status) }
+                  { backgroundColor: getStatusColor(order.status) },
                 ]}
               >
                 <Text style={styles.statusText}>{order.status}</Text>
@@ -1643,97 +1719,13 @@ const handleRecalculatePrice = async (productId: string) => {
             <Text style={styles.orderDate}>Date: {order.createdAt}</Text>
           </TouchableOpacity>
         ))}
-      {/* Modal chi tiết order */}
-      <Modal
+      {/* Enhanced Order Details Modal */}
+      <OrderDetailsModal
         visible={orderDetailVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeOrderDetail}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.3)"
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderRadius: 12,
-              padding: 24,
-              width: "85%"
-            }}
-          >
-            {selectedOrder && (
-              <>
-                <Text
-                  style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}
-                >
-                  Order #{selectedOrder.orderNumber}
-                </Text>
-                <Text>
-                  Customer:{" "}
-                  {typeof selectedOrder.user === "string"
-                    ? selectedOrder.user
-                    : selectedOrder.user.fullName}
-                </Text>
-                <Text>Total: {formatCurrency(selectedOrder.totalPrice)}</Text>
-                <Text>Date: {selectedOrder.createdAt}</Text>
-                <Text>Status:</Text>
-                <Picker
-                  selectedValue={orderStatusDraft}
-                  onValueChange={setOrderStatusDraft}
-                  style={{ marginVertical: 8 }}
-                >
-                  <Picker.Item label="Pending" value="pending" />
-                  <Picker.Item label="Processing" value="processing" />
-                  <Picker.Item label="Delivered" value="delivered" />
-                  <Picker.Item label="Cancelled" value="cancelled" />
-                </Picker>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginTop: 16
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={closeOrderDetail}
-                    style={{
-                      flex: 1,
-                      marginRight: 8,
-                      backgroundColor: "#e5e7eb",
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ color: "#374151", fontWeight: "600" }}>
-                      Close
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleChangeOrderStatus}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#3b82f6",
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontWeight: "600" }}>
-                      Save
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
+        orderId={selectedOrder?.id || null}
+        onClose={closeOrderDetail}
+        onStatusUpdate={loadOrders}
+      />
     </ScrollView>
   );
 
@@ -1804,7 +1796,7 @@ const handleRecalculatePrice = async (productId: string) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   header: {
     backgroundColor: "#2d3748",
@@ -1817,23 +1809,23 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4
+    shadowRadius: 4,
   },
   headerLeft: {
-    flex: 1
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#ffffff",
-    marginBottom: 4
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#d1d5db"
+    color: "#d1d5db",
   },
   logoutButton: {
-    padding: 8
+    padding: 8,
   },
   tabsContainer: {
     backgroundColor: "#ffffff",
@@ -1841,7 +1833,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-    maxHeight: 60
+    maxHeight: 60,
   },
   tabButton: {
     flexDirection: "row",
@@ -1851,36 +1843,36 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 20,
     backgroundColor: "#f3f4f6",
-    minWidth: 100
+    minWidth: 100,
   },
   activeTabButton: {
-    backgroundColor: "#3b82f6"
+    backgroundColor: "#3b82f6",
   },
   tabText: {
     marginLeft: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#6b7280"
+    color: "#6b7280",
   },
   activeTabText: {
-    color: "#ffffff"
+    color: "#ffffff",
   },
   content: {
     flex: 1,
-    padding: 16
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: "#6b7280"
+    color: "#6b7280",
   },
   statsGrid: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   statsCard: {
     backgroundColor: "#ffffff",
@@ -1892,46 +1884,46 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   statsCardContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   statsCardLeft: {
-    flex: 1
+    flex: 1,
   },
   statsTitle: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4
+    marginBottom: 4,
   },
   statsValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   statsIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   quickActions: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginBottom: 16
+    marginBottom: 16,
   },
   actionGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   actionButton: {
     backgroundColor: "#ffffff",
@@ -1943,13 +1935,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   actionText: {
     marginTop: 8,
     fontSize: 14,
     fontWeight: "600",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   searchContainer: {
     position: "relative",
@@ -1962,19 +1954,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: "#000000", // Black text color
-    paddingRight: 40 // Make space for clear button
+    paddingRight: 40, // Make space for clear button
   },
   clearButton: {
     position: "absolute",
     right: 12,
     top: 12,
-    padding: 8
+    padding: 8,
   },
   userCard: {
     backgroundColor: "#ffffff",
@@ -1987,7 +1979,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   userAvatar: {
     width: 50,
@@ -1996,45 +1988,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#3b82f6",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16
+    marginRight: 16,
   },
   userInitial: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#ffffff"
+    color: "#ffffff",
   },
   userInfo: {
-    flex: 1
+    flex: 1,
   },
   userName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 2
+    marginBottom: 2,
   },
   userRole: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   userStatus: {
-    marginLeft: 16
+    marginLeft: 16,
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    marginBottom: 12
+    marginBottom: 12,
   },
   statusText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#ffffff",
-    textTransform: "uppercase"
+    textTransform: "uppercase",
   },
   productCard: {
     backgroundColor: "#ffffff",
@@ -2047,40 +2039,40 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   productImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
-    marginRight: 16
+    marginRight: 16,
   },
   productInfo: {
-    flex: 1
+    flex: 1,
   },
   productName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 2
+    marginBottom: 2,
   },
   productStock: {
     fontSize: 12,
     color: "#6b7280",
-    marginBottom: 2
+    marginBottom: 2,
   },
   productCategory: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   productStatus: {
-    marginLeft: 16
+    marginLeft: 16,
   },
   orderCard: {
     backgroundColor: "#ffffff",
@@ -2091,48 +2083,48 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   orderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12
+    marginBottom: 12,
   },
   orderNumber: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   orderUser: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 4
+    marginBottom: 4,
   },
   orderPrice: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10b981",
-    marginBottom: 4
+    marginBottom: 4,
   },
   orderDate: {
     fontSize: 12,
-    color: "#9ca3af"
+    color: "#9ca3af",
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   contentContainer: {
     padding: 20,
-    backgroundColor: "#ffffff"
+    backgroundColor: "#ffffff",
   },
   statsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 24,
-    paddingHorizontal: 4
+    paddingHorizontal: 4,
   },
   statCard: {
     backgroundColor: "#f8f9fa",
@@ -2147,32 +2139,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   statNumber: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginTop: 10
+    marginTop: 10,
   },
   statLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginTop: 4
+    marginTop: 4,
   },
   quickActionsContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   actionsGrid: {
-    gap: 12
+    gap: 12,
   },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12
+    marginBottom: 12,
   },
   recentOrdersContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   recentOrderCard: {
     backgroundColor: "#ffffff",
@@ -2183,7 +2175,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   viewAllButton: {
     flexDirection: "row",
@@ -2192,21 +2184,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "#f3f4f6"
+    backgroundColor: "#f3f4f6",
   },
   viewAllText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#1f2937",
-    marginRight: 8
+    marginRight: 8,
   },
   revenueAnalyticsContainer: {
-    marginBottom: 24
+    marginBottom: 24,
   },
   revenueGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   revenueCard: {
     backgroundColor: "#ffffff",
@@ -2219,39 +2211,39 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3
+    elevation: 3,
   },
   revenueLabel: {
     fontSize: 14,
     color: "#6b7280",
-    marginBottom: 8
+    marginBottom: 8,
   },
   revenueValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1f2937"
+    color: "#1f2937",
   },
   emptyState: {
     alignItems: "center",
-    paddingVertical: 40
+    paddingVertical: 40,
   },
   emptyStateText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#95a5a6"
+    color: "#95a5a6",
   },
   // Additional styles for new components
   sectionContainer: {
     display: "flex",
     flex: 1,
     backgroundColor: "#ffffff",
-    padding: 16
+    padding: 16,
   },
   sectionHeader: {
     flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20
+    marginBottom: 20,
   },
   addButton: {
     backgroundColor: "#1a1a1a",
@@ -2259,38 +2251,38 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 8
+    borderRadius: 8,
   },
   addButtonText: {
     color: "#ffffff",
     fontSize: 14,
     fontWeight: "600",
-    marginLeft: 8
+    marginLeft: 8,
   },
   productDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20
+    lineHeight: 20,
   },
   productMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8
+    marginBottom: 8,
   },
   productActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   actionIconButton: {
     backgroundColor: "#f8f9fa",
     padding: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   categoryCard: {
     backgroundColor: "#ffffff",
@@ -2305,96 +2297,96 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#e9ecef"
+    borderColor: "#e9ecef",
   },
   categoryImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
     marginRight: 16,
-    backgroundColor: "#f3f4f6"
+    backgroundColor: "#f3f4f6",
   },
   categoryInfo: {
-    flex: 1
+    flex: 1,
   },
   categoryName: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 4
+    marginBottom: 4,
   },
   categoryDescription: {
     fontSize: 14,
     color: "#6c757d",
     marginBottom: 8,
-    lineHeight: 20
+    lineHeight: 20,
   },
   categoryMeta: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   categoryProductCount: {
     fontSize: 14,
     color: "#6c757d",
-    fontWeight: "500"
+    fontWeight: "500",
   },
   categoryActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   userPhone: {
     fontSize: 14,
     color: "#6c757d",
-    marginBottom: 4
+    marginBottom: 4,
   },
   userMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8
+    gap: 8,
   },
   userRoleBadge: {
     backgroundColor: "#e9ecef",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12
+    borderRadius: 12,
   },
   userRoleText: {
     fontSize: 12,
     fontWeight: "600",
     color: "#495057",
-    textTransform: "capitalize"
+    textTransform: "capitalize",
   },
   userActions: {
     flexDirection: "column",
     justifyContent: "center",
     gap: 8,
-    marginLeft: 12
+    marginLeft: 12,
   },
   listContainer: {
-    paddingBottom: 20
+    paddingBottom: 20,
   },
   orderTotal: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#10b981"
+    color: "#10b981",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 12,
     padding: 24,
-    width: '100%',
+    width: "100%",
     maxWidth: 500,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -2404,13 +2396,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1f2937",
-    marginBottom: 16
+    marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
     color: "#6b7280",
     marginBottom: 8,
-    alignSelf: "flex-start"
+    alignSelf: "flex-start",
   },
   textInput: {
     width: "100%",
@@ -2421,83 +2413,83 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: "#1f2937",
-    marginBottom: 16
+    marginBottom: 16,
   },
   textAreaInput: {
     minHeight: 80,
     paddingTop: 12,
-    textAlignVertical: "top"
+    textAlignVertical: "top",
   },
   statusToggleContainer: {
     width: "100%",
-    marginBottom: 16
+    marginBottom: 16,
   },
   statusToggleRow: {
     flexDirection: "row",
     justifyContent: "space-around",
     backgroundColor: "#f3f4f6",
     borderRadius: 12,
-    paddingVertical: 4
+    paddingVertical: 4,
   },
   statusToggleButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 12
+    borderRadius: 12,
   },
   statusToggleActive: {
     backgroundColor: "#10b981",
     borderWidth: 1,
-    borderColor: "#10b981"
+    borderColor: "#10b981",
   },
   statusToggleInactive: {
     backgroundColor: "#e74c3c",
     borderWidth: 1,
-    borderColor: "#e74c3c"
+    borderColor: "#e74c3c",
   },
   statusToggleText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#ffffff"
+    color: "#ffffff",
   },
   statusToggleActiveText: {
-    color: "#ffffff"
+    color: "#ffffff",
   },
   statusToggleInactiveText: {
-    color: "#ffffff"
+    color: "#ffffff",
   },
   modalActions: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "100%",
-    marginTop: 20
+    marginTop: 20,
   },
   modalButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    alignItems: "center"
+    alignItems: "center",
   },
   cancelButton: {
     backgroundColor: "#e5e7eb",
-    marginRight: 10
+    marginRight: 10,
   },
   saveButton: {
-    backgroundColor: "#3b82f6"
+    backgroundColor: "#3b82f6",
   },
   buttonText: {
     color: "#ffffff",
     fontSize: 16,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   deleteButton: {
-    backgroundColor: "#dc3545"
+    backgroundColor: "#dc3545",
   },
   modalText: {
     fontSize: 14,
     color: "#6b7280",
     textAlign: "center",
-    marginBottom: 20
-  }
+    marginBottom: 20,
+  },
 });
 
 export default AdminDashboard;

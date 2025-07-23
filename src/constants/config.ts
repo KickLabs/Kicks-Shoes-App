@@ -1,5 +1,5 @@
 // Sử dụng IP hiện tại từ các file khác để nhất quán
-export const API_BASE_URL = "http://192.168.1.85:3000";
+export const API_BASE_URL = "http://10.13.13.119:3000";
 
 export const APP_CONFIG = {
   name: "KicksApp",
@@ -10,7 +10,7 @@ export const APP_CONFIG = {
 // Chat Configuration
 export const CHAT_CONFIG = {
   // Socket.IO server URL (không có /api)
-  SOCKET_URL: "http://192.168.1.85:3000",
+  SOCKET_URL: "http://10.13.13.119:3000",
   // Timeout cho chat requests (ms)
   CHAT_TIMEOUT: 30000,
   // Max file size cho chat attachments (bytes)

@@ -141,7 +141,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
                 "🛡️ AuthGuard - Login pressed, navigating to",
                 redirectTo
               );
-              (navigation as any).navigate(redirectTo);
+              // Sử dụng reset để chuyển sang Login ở StackNavigator, không còn tabbar
+              (navigation as any).reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
               setIsNavigating(false);
               setHasShownAlert(false);
             },

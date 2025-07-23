@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Platform } from "react-native";
 
-const backend = "http://192.168.1.85:3000/api";
+const backend = "http://10.13.13.119:3000/api";
 
 console.log("[API] 🚀 Backend URL:", backend);
 

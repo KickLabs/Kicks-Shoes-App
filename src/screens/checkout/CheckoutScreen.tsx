@@ -278,6 +278,8 @@ const CheckoutScreen: React.FC = () => {
       Alert.alert("Order Success", "Your order has been placed!", [
         {
           text: "OK",
+          // Nếu muốn chuyển sang chi tiết đơn hàng mới, hãy truyền orderId ở đây
+          // onPress: () => navigation.navigate("OrderDetailsScreen", { orderId: <id> }),
           onPress: () => navigation.navigate("OrderHistory" as any),
         },
       ]);
