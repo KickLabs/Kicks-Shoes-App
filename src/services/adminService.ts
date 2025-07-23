@@ -184,6 +184,85 @@ export const getAdminProducts = async (): Promise<ApiProduct[]> => {
   }
 };
 
+export const createProduct = async (productData: any) => {
+  const token = await AsyncStorage.getItem("accessToken");  // Lấy token từ AsyncStorage
+  const response = await fetch(`${API_BASE_URL}/api/products/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,  // Thêm Authorization header
+    },
+    body: JSON.stringify(productData),  // Gửi dữ liệu sản phẩm
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product created:", result);
+  return result.data;
+};
+
+export const updateProduct = async (productId: string, updatedData: any) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(updatedData),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product updated:", result);
+  return result.data;
+};
+
+export const deleteProduct = async (productId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}/delete`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Product deleted:", result);
+  return result.data;
+};
+
+export const recalculatePrice = async (productId: string) => {
+  const token = await AsyncStorage.getItem("accessToken");
+  const response = await fetch(`${API_BASE_URL}/api/products/${productId}/recalculate-price`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.log("[AdminService] Recalculated price:", result);
+  return result.data;
+};
+
+
 // Get All Categories
 export const getAdminCategories = async (): Promise<ApiCategory[]> => {
   try {
